@@ -45,10 +45,15 @@ const add = async (userId, token) => {
   return db.insert(toSnakeCase({ createdAt: new Date(), ...obj })).into(table).then(() => obj);
 };
 
+const deleteRefreshToken = (userId) => db(table)
+  .where('user_id', '=', userId)
+  .delete();
+
 export default {
   generate,
   encrypt,
   decrypt,
   getByToken,
   add,
+  deleteRefreshToken,
 };

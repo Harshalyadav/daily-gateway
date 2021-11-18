@@ -8,6 +8,10 @@ const get = (userId, app) => db.select('visited_at', 'first_visit', 'referral').
   .then((res) => res.map(toCamelCase))
   .then((rows) => (rows.length ? rows[0] : null));
 
+const deleteVisits = (userId) => db(table)
+  .where('user_id', '=', userId)
+  .delete();
+
 const upsert = (userId, app, visitedAt, firstVisit, referral, ip) => {
   const obj = {
     userId,
@@ -34,4 +38,5 @@ export default {
   get,
   upsert,
   getFirstVisitAndReferral,
+  deleteVisits,
 };
