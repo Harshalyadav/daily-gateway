@@ -29,13 +29,8 @@ const add = (userId, provider, providerId) => {
   })).into(table).then(() => obj);
 };
 
-const deleteProvider = (userId) => db(table)
-  .where('user_id', '=', userId)
-  .delete();
-
 export default {
   getByProviderId,
   getByUserId,
   add,
-  deleteProvider,
 };

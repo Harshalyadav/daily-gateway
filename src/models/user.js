@@ -59,10 +59,6 @@ const update = (id, user) => db(table)
     updatedAt: new Date(),
   }));
 
-const deleteAccount = (id) => db(table)
-  .where('id', '=', id)
-  .delete();
-
 const updateReputation = (id, reputation) => db(table)
   .where('id', '=', id)
   .update({ reputation });
@@ -74,5 +70,4 @@ export default {
   add,
   update,
   updateReputation,
-  deleteAccount,
 };

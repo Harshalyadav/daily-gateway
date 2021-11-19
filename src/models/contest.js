@@ -54,10 +54,6 @@ const getParticipant = (contestId, userId) => db.select('*')
   .then((res) => res.map(toCamelCase))
   .then((res) => (res.length ? res[0] : null));
 
-const deleteParticipant = (userId) => db(participantsTable)
-  .where('user_id', '=', userId)
-  .delete();
-
 export default {
   getOngoingContest,
   getUpcomingContest,
@@ -65,5 +61,4 @@ export default {
   incrementParticipantCount,
   setParticipantAsEligible,
   getParticipant,
-  deleteParticipant,
 };

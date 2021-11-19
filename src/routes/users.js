@@ -7,7 +7,6 @@ import validator, {
 import _ from 'lodash';
 import { ForbiddenError, ValidationError } from '../errors';
 import userModel from '../models/user';
-import visitModel from '../models/visit';
 import role from '../models/role';
 import { setTrackingId } from '../tracking';
 import config from '../config';
@@ -16,49 +15,9 @@ import upload from '../upload';
 import { uploadAvatar } from '../cloudinary';
 import { bootSharedLogic } from './boot';
 import { validateRefreshToken } from '../auth';
-import refreshToken from '../models/refreshToken';
-import contest from '../models/contest';
-import provider from '../models/provider';
-import { getContactIdByEmail, removeUserContact } from '../mailing';
 
 const updateUser = async (userId, user, newProfile) => {
   await userModel.update(userId, newProfile);
-};
-
-const deleteUser = async (userId, user) => {
-  const contactId = process.env.NODE_ENV === 'production' ? await getContactIdByEmail(user.email) : '';
-
-  const deleteActions = [
-    visitModel.deleteVisits(userId),
-    role.deleteRoles(userId),
-    contest.deleteParticipant(userId),
-    provider.deleteProvider(userId),
-    refreshToken.deleteRefreshToken(userId),
-  ];
-  if (process.env.NODE_ENV === 'production') {
-    deleteActions.push(removeUserContact(contactId));
-  }
-
-  await Promise.all(deleteActions);
-  await userModel.deleteAccount(userId);
-};
-
-const logout = (ctx) => {
-  setTrackingId(ctx, undefined);
-  ctx.cookies.set(
-    config.cookies.auth.key,
-    undefined, addSubdomainOpts(ctx, config.cookies.auth.opts),
-  );
-  ctx.cookies.set(
-    config.cookies.refreshToken.key,
-    undefined, addSubdomainOpts(ctx, config.cookies.refreshToken.opts),
-  );
-  ctx.cookies.set(
-    config.cookies.referral.key,
-    undefined, addSubdomainOpts(ctx, config.cookies.referral.opts),
-  );
-  ctx.status = 204;
-  return ctx;
 };
 
 const router = Router({
@@ -180,28 +139,23 @@ router.get(
   },
 );
 
-router.post('/delete', async (ctx) => {
-  if (ctx.state.user) {
-    const { userId } = ctx.state.user;
-    const user = await userModel.getById(userId);
-    if (!user) {
-      throw new ForbiddenError();
-    }
-    try {
-      await deleteUser(userId, user);
-    } catch (err) {
-      throw err;
-    }
-    logout(ctx);
-  } else {
-    throw new ForbiddenError();
-  }
-});
-
 router.post(
   '/logout',
   async (ctx) => {
-    logout(ctx);
+    setTrackingId(ctx, undefined);
+    ctx.cookies.set(
+      config.cookies.auth.key,
+      undefined, addSubdomainOpts(ctx, config.cookies.auth.opts),
+    );
+    ctx.cookies.set(
+      config.cookies.refreshToken.key,
+      undefined, addSubdomainOpts(ctx, config.cookies.refreshToken.opts),
+    );
+    ctx.cookies.set(
+      config.cookies.referral.key,
+      undefined, addSubdomainOpts(ctx, config.cookies.referral.opts),
+    );
+    ctx.status = 204;
   },
 );
 
