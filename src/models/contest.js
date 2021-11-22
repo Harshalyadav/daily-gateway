@@ -25,7 +25,10 @@ const add = (startAt, endAt) => {
     startAt,
     endAt,
   };
-  return db.insert(toSnakeCase(obj)).into(table).then(() => obj);
+  return db
+    .insert(toSnakeCase(obj))
+    .into(table)
+    .then(() => obj);
 };
 
 const incrementParticipantCount = (contestId, userId) => {
@@ -42,11 +45,14 @@ const incrementParticipantCount = (contestId, userId) => {
 const setParticipantAsEligible = (contestId, userId) => db(participantsTable)
   .where('contest_id', '=', contestId)
   .andWhere('user_id', '=', userId)
-  .update(toSnakeCase({
-    eligible: true,
-  }));
+  .update(
+    toSnakeCase({
+      eligible: true,
+    }),
+  );
 
-const getParticipant = (contestId, userId) => db.select('*')
+const getParticipant = (contestId, userId) => db
+  .select('*')
   .from(participantsTable)
   .where('contest_id', '=', contestId)
   .andWhere('user_id', '=', userId)

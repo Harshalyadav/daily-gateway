@@ -16,7 +16,8 @@ import {
   createServiceAccountAndGrantRoles,
   createSubscriptionsFromWorkers,
   deployDebeziumToKubernetes,
-  getImageTag, getMemoryAndCpuMetrics,
+  getImageTag,
+  getMemoryAndCpuMetrics,
   infra,
   k8sServiceAccountToIdentity,
   location,
@@ -32,7 +33,9 @@ const debeziumTopic = new gcp.pubsub.Topic('debezium-topic', {
   name: debeziumTopicName,
 });
 
-const vpcConnector = infra.getOutput('serverlessVPC') as Output<gcp.vpcaccess.Connector>;
+const vpcConnector = infra.getOutput(
+  'serverlessVPC',
+) as Output<gcp.vpcaccess.Connector>;
 
 // Provision Redis (Memorystore)
 const redis = new gcp.redis.Instance(`${name}-redis`, {
@@ -136,11 +139,21 @@ export const bgServiceUrl = bgService.statuses[0].url;
 const workers = [
   { topic: 'alerts-updated', subscription: 'alerts-updated-redis' },
   { topic: 'user-updated', subscription: 'user-updated-mailing' },
+  { topic: 'user-deleted', subscription: 'user-deleted-mailing' },
   { topic: 'user-registered', subscription: 'user-registered-slack' },
   { topic: 'user-reputation-updated', subscription: 'update-reputation' },
-  { topic: 'user-registered', subscription: 'user-registered-referral-contest' },
-  { topic: 'new-eligible-participant', subscription: 'new-eligible-participant-notification' },
-  { topic: 'new-eligible-participant', subscription: 'new-eligible-participant-boost-chances' },
+  {
+    topic: 'user-registered',
+    subscription: 'user-registered-referral-contest',
+  },
+  {
+    topic: 'new-eligible-participant',
+    subscription: 'new-eligible-participant-notification',
+  },
+  {
+    topic: 'new-eligible-participant',
+    subscription: 'new-eligible-participant-boost-chances',
+  },
   {
     topic: 'gateway.changes',
     subscription: 'gateway-cdc',
@@ -149,9 +162,16 @@ const workers = [
   { topic: 'features-reset', subscription: 'clear-features-cache' },
 ];
 
-const topics = ['features-reset'].map((topic) => new gcp.pubsub.Topic(topic, { name: topic }));
+const topics = ['features-reset'].map(
+  (topic) => new gcp.pubsub.Topic(topic, { name: topic }),
+);
 
-createSubscriptionsFromWorkers(name, addLabelsToWorkers(workers, { app: name }), bgServiceUrl, [debeziumTopic, ...topics]);
+createSubscriptionsFromWorkers(
+  name,
+  addLabelsToWorkers(workers, { app: name }),
+  bgServiceUrl,
+  [debeziumTopic, ...topics],
+);
 
 const envVars: Record<string, Input<string>> = {
   ...config.requireObject<Record<string, string>>('env'),

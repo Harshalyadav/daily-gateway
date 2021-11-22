@@ -4,7 +4,28 @@ import { getReferralLink } from '../referrals';
 
 const table = 'users';
 
-const select = () => db.select('id', 'name', 'email', 'image', 'company', 'title', 'info_confirmed', 'premium', 'accepted_marketing', 'username', 'bio', 'twitter', 'github', 'hashnode', 'timezone', 'portfolio', 'reputation', 'created_at').from(table);
+const select = () => db
+  .select(
+    'id',
+    'name',
+    'email',
+    'image',
+    'company',
+    'title',
+    'info_confirmed',
+    'premium',
+    'accepted_marketing',
+    'username',
+    'bio',
+    'twitter',
+    'github',
+    'hashnode',
+    'timezone',
+    'portfolio',
+    'reputation',
+    'created_at',
+  )
+  .from(table);
 
 const mapUser = (user) => {
   const obj = _.omitBy(toCamelCase(user), _.isNull);
@@ -45,23 +66,59 @@ const add = (id, name, email, image, referral = null) => {
     image,
     referral,
   };
-  return db.insert(toSnakeCase({
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    ...obj,
-  })).into(table).then(() => obj);
+  return db
+    .insert(
+      toSnakeCase({
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        ...obj,
+      }),
+    )
+    .into(table)
+    .then(() => obj);
 };
 
 const update = (id, user) => db(table)
   .where('id', '=', id)
-  .update(toSnakeCase({
-    ..._.pick(user, ['name', 'email', 'image', 'company', 'title', 'infoConfirmed', 'premium', 'acceptedMarketing', 'username', 'bio', 'twitter', 'github', 'portfolio', 'hashnode', 'timezone']),
-    updatedAt: new Date(),
-  }));
+  .update(
+    toSnakeCase({
+      ..._.pick(user, [
+        'name',
+        'email',
+        'image',
+        'company',
+        'title',
+        'infoConfirmed',
+        'premium',
+        'acceptedMarketing',
+        'username',
+        'bio',
+        'twitter',
+        'github',
+        'portfolio',
+        'hashnode',
+        'timezone',
+      ]),
+      updatedAt: new Date(),
+    }),
+  );
 
-const updateReputation = (id, reputation) => db(table)
-  .where('id', '=', id)
-  .update({ reputation });
+const updateReputation = (id, reputation) => db(table).where('id', '=', id).update({ reputation });
+
+const deleteAccount = async (id) => db.transaction(async (trx) => {
+  await db('visits').where('user_id', '=', id).delete().transacting(trx);
+  await db('roles').where('user_id', '=', id).delete().transacting(trx);
+  await db('referral_participants')
+    .where('user_id', '=', id)
+    .delete()
+    .transacting(trx);
+  await db('providers').where('user_id', '=', id).delete().transacting(trx);
+  await db('refresh_tokens')
+    .where('user_id', '=', id)
+    .delete()
+    .transacting(trx);
+  await db(table).where('id', '=', id).delete().transacting(trx);
+});
 
 export default {
   getById,
@@ -70,4 +127,5 @@ export default {
   add,
   update,
   updateReputation,
+  deleteAccount,
 };
