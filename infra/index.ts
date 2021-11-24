@@ -3,13 +3,9 @@ import * as k8s from '@pulumi/kubernetes';
 import { Input, Output } from '@pulumi/pulumi';
 import {
   addLabelsToWorkers,
-  CloudRunAccess,
   config,
   convertRecordToContainerEnvVars, createAutoscaledApplication,
   createAutoscaledExposedApplication,
-  createCloudRunService,
-  createEncryptedEnvVar,
-  createEnvVarsFromSecret,
   createK8sServiceAccountFromGCPServiceAccount,
   createKubernetesSecretFromRecord,
   createMigrationJob,
@@ -18,10 +14,8 @@ import {
   deployDebeziumToKubernetes, getFullSubscriptionLabel,
   getImageTag,
   getMemoryAndCpuMetrics, getPubSubUndeliveredMessagesMetric,
-  infra,
   k8sServiceAccountToIdentity,
   location,
-  Secret,
 } from '@dailydotdev/pulumi-common';
 import { readFile } from 'fs/promises';
 
@@ -32,10 +26,6 @@ const debeziumTopicName = `${name}.changes`;
 const debeziumTopic = new gcp.pubsub.Topic('debezium-topic', {
   name: debeziumTopicName,
 });
-
-const vpcConnector = infra.getOutput(
-  'serverlessVPC',
-) as Output<gcp.vpcaccess.Connector>;
 
 // Provision Redis (Memorystore)
 const redis = new gcp.redis.Instance(`${name}-redis`, {
@@ -61,13 +51,6 @@ const { serviceAccount } = createServiceAccountAndGrantRoles(
   ],
 );
 
-const secrets: Input<Secret>[] = [
-  ...createEnvVarsFromSecret(name),
-  { name: 'REDIS_HOST', value: redisHost },
-  createEncryptedEnvVar(name, 'redisPass', redis.authString),
-  { name: 'REDIS_PORT', value: redis.port.apply((port) => port.toString()) },
-];
-
 const image = `gcr.io/daily-ops/daily-${name}:${imageTag}`;
 
 // Create K8S service account and assign it to a GCP service account
@@ -86,12 +69,28 @@ new gcp.serviceaccount.IAMBinding(`${name}-k8s-iam-binding`, {
   members: [k8sServiceAccountToIdentity(k8sServiceAccount)],
 });
 
+const envVars: Record<string, Input<string>> = {
+  ...config.requireObject<Record<string, string>>('env'),
+  redisHost,
+  redisPass: redis.authString,
+  redisPort: redis.port.apply((port) => port.toString()),
+};
+
+const containerEnvVars = convertRecordToContainerEnvVars({ secretName: name, data: envVars });
+
+createKubernetesSecretFromRecord({
+  data: envVars,
+  resourceName: 'k8s-secret',
+  name,
+  namespace,
+});
+
 const migrationJob = createMigrationJob(
   `${name}-migration`,
   namespace,
   image,
   ['yarn', 'run', 'db:migrate:latest'],
-  secrets,
+  containerEnvVars,
   k8sServiceAccount,
 );
 
@@ -101,25 +100,6 @@ const limits: Input<{
   cpu: '1',
   memory: '512Mi',
 };
-
-// Deploy to Cloud Run (foreground & background)
-const service = createCloudRunService(
-  name,
-  image,
-  secrets,
-  limits,
-  vpcConnector,
-  serviceAccount,
-  {
-    minScale: 1,
-    concurrency: 250,
-    dependsOn: [migrationJob],
-    access: CloudRunAccess.Public,
-    iamMemberName: `${name}-public`,
-  },
-);
-
-export const serviceUrl = service.statuses[0].url;
 
 const workers = [
   { topic: 'alerts-updated', subscription: 'alerts-updated-redis' },
@@ -154,22 +134,8 @@ const topics = ['features-reset'].map(
 createSubscriptionsFromWorkers(
   name,
   addLabelsToWorkers(workers, { app: name }),
-  {dependsOn: [debeziumTopic, ...topics]},
+  { dependsOn: [debeziumTopic, ...topics] },
 );
-
-const envVars: Record<string, Input<string>> = {
-  ...config.requireObject<Record<string, string>>('env'),
-  redisHost,
-  redisPass: redis.authString,
-  redisPort: redis.port.apply((port) => port.toString()),
-};
-
-createKubernetesSecretFromRecord({
-  data: envVars,
-  resourceName: 'k8s-secret',
-  name,
-  namespace,
-});
 
 const probe: k8s.types.input.core.v1.Probe = {
   httpGet: { path: '/health', port: 'http' },
@@ -188,7 +154,7 @@ createAutoscaledExposedApplication({
       ports: [{ name: 'http', containerPort: 3000, protocol: 'TCP' }],
       readinessProbe: probe,
       livenessProbe: probe,
-      env: convertRecordToContainerEnvVars({ secretName: name, data: envVars }),
+      env: containerEnvVars,
       resources: {
         requests: limits,
         limits,
@@ -215,7 +181,7 @@ createAutoscaledApplication({
       name: 'app',
       image,
       env: [
-        ...convertRecordToContainerEnvVars({ secretName: name, data: envVars }),
+        ...containerEnvVars,
         { name: 'MODE', value: 'background' },
       ],
       resources: {
