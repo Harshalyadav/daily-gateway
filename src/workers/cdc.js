@@ -37,6 +37,7 @@ const onReferralContestsChange = async (log, data) => {
 const worker = {
   topic: 'gateway.changes',
   subscription: 'gateway-cdc',
+  maxMessages: 10,
   handler: async (message, log) => {
     try {
       const data = messageToJson(message);

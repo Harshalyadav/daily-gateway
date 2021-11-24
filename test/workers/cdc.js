@@ -1,8 +1,6 @@
-import supertest from 'supertest';
 import { expect } from 'chai';
 import sinon from 'sinon';
 import knexCleaner from 'knex-cleaner';
-import app from '../../src/background';
 import worker from '../../src/workers/cdc';
 import * as pubsub from '../../src/pubsub';
 import { expectSuccessfulBackground, mockChangeMessage } from '../helpers';
@@ -12,14 +10,7 @@ import {
 import db, { migrate, toCamelCase } from '../../src/db';
 
 describe('cdc', () => {
-  let request;
-  let server;
   let publishEventStub;
-
-  before(() => {
-    server = app.listen();
-    request = supertest(server);
-  });
 
   beforeEach(async () => {
     publishEventStub = sinon.stub(pubsub, 'publishEvent').returns(Promise.resolve());
@@ -29,10 +20,6 @@ describe('cdc', () => {
 
   afterEach(() => {
     sinon.restore();
-  });
-
-  after(() => {
-    server.close();
   });
 
   const baseUser = {
@@ -47,7 +34,7 @@ describe('cdc', () => {
     await db.insert(baseUser).into('users');
     const [user] = await db.select().from('users').where('id', '=', baseUser.id).limit(1);
     await expectSuccessfulBackground(
-      request,
+
       worker,
       mockChangeMessage({
         after: user,
@@ -67,7 +54,7 @@ describe('cdc', () => {
     };
     await db('users').update({ name: after.name }).where('id', '=', baseUser.id);
     await expectSuccessfulBackground(
-      request,
+
       worker,
       mockChangeMessage({
         before: user,
@@ -89,7 +76,7 @@ describe('cdc', () => {
 
   it('should notify on user deleted', async () => {
     await expectSuccessfulBackground(
-      request,
+
       worker,
       mockChangeMessage({
         before: baseUser,
@@ -117,7 +104,7 @@ describe('cdc', () => {
       eligible: true,
     };
     await expectSuccessfulBackground(
-      request,
+
       worker,
       mockChangeMessage({
         before: baseParticipant,
@@ -135,7 +122,7 @@ describe('cdc', () => {
       referrals: 5,
     };
     await expectSuccessfulBackground(
-      request,
+
       worker,
       mockChangeMessage({
         before: baseParticipant,

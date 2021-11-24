@@ -1,42 +1,34 @@
-import Koa from 'koa';
-import bodyParser from 'koa-bodyparser';
-import KoaPinoLogger from 'koa-pino-logger';
-
-import Router from 'koa-router';
-import errorHandler from './middlewares/errorHandler';
+import { PubSub } from '@google-cloud/pubsub';
 import logger from './logger';
-
-import health from './routes/health';
 import workers from './workers';
-import { CustomError } from './errors';
 
-const app = new Koa();
+export default function background() {
+  const pubsub = new PubSub();
 
-app.proxy = true;
-
-app.use(KoaPinoLogger({ logger, useLevel: 'debug' }));
-app.use(errorHandler());
-
-app.use(health.routes(), health.allowedMethods());
-
-const router = new Router();
-router.use(bodyParser());
-
-workers.forEach((worker) => {
-  router.post(`/${worker.subscription}`, async (ctx) => {
-    const { body } = ctx.request;
-    if (!body) {
-      throw new CustomError('no Pub/Sub message received', 400);
-    }
-    if (!body.message) {
-      throw new CustomError('invalid Pub/Sub message format', 400);
-    }
-
-    await worker.handler(body.message, ctx.log);
-    ctx.status = 204;
+  workers.forEach((worker) => {
+    const { subscription } = worker;
+    logger.info(`subscribing to ${subscription}`);
+    const sub = pubsub.subscription(subscription, {
+      flowControl: {
+        maxMessages: worker.maxMessages || 1,
+      },
+      batching: { maxMilliseconds: 10 },
+    });
+    const childLogger = logger.child({ subscription });
+    sub.on('message', async (message) => {
+      try {
+        await worker.handler({
+          messageId: message.id,
+          data: message.data,
+        }, childLogger);
+        message.ack();
+      } catch (err) {
+        childLogger.error(
+          { messageId: message.id, data: message.data.toString('utf-8'), err },
+          'failed to process message',
+        );
+        message.nack();
+      }
+    });
   });
-});
-
-app.use(router.routes(), router.allowedMethods());
-
-export default app;
+}

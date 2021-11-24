@@ -2,10 +2,9 @@ import * as gcp from '@pulumi/gcp';
 import { Input, Output } from '@pulumi/pulumi';
 import {
   addLabelsToWorkers,
-  bindK8sServiceAccountToGCP,
   CloudRunAccess,
   config,
-  convertRecordToContainerEnvVars,
+  convertRecordToContainerEnvVars, createAutoscaledApplication,
   createAutoscaledExposedApplication,
   createCloudRunService,
   createEncryptedEnvVar,
@@ -15,9 +14,9 @@ import {
   createMigrationJob,
   createServiceAccountAndGrantRoles,
   createSubscriptionsFromWorkers,
-  deployDebeziumToKubernetes,
+  deployDebeziumToKubernetes, getFullSubscriptionLabel,
   getImageTag,
-  getMemoryAndCpuMetrics,
+  getMemoryAndCpuMetrics, getPubSubUndeliveredMessagesMetric,
   infra,
   k8sServiceAccountToIdentity,
   location,
@@ -119,22 +118,7 @@ const service = createCloudRunService(
   },
 );
 
-const bgService = createCloudRunService(
-  `${name}-background`,
-  image,
-  [...secrets, { name: 'MODE', value: 'background' }],
-  { cpu: '1', memory: '256Mi' },
-  vpcConnector,
-  serviceAccount,
-  {
-    dependsOn: [migrationJob],
-    access: CloudRunAccess.PubSub,
-    iamMemberName: `${name}-pubsub-invoker`,
-  },
-);
-
 export const serviceUrl = service.statuses[0].url;
-export const bgServiceUrl = bgService.statuses[0].url;
 
 const workers = [
   { topic: 'alerts-updated', subscription: 'alerts-updated-redis' },
@@ -169,8 +153,7 @@ const topics = ['features-reset'].map(
 createSubscriptionsFromWorkers(
   name,
   addLabelsToWorkers(workers, { app: name }),
-  bgServiceUrl,
-  [debeziumTopic, ...topics],
+  {dependsOn: [debeziumTopic, ...topics]},
 );
 
 const envVars: Record<string, Input<string>> = {
@@ -209,6 +192,54 @@ createAutoscaledExposedApplication({
   ],
   maxReplicas: 10,
   metrics: getMemoryAndCpuMetrics(),
+  deploymentDependsOn: [migrationJob],
+});
+
+const bgLimits: Input<{
+  [key: string]: Input<string>;
+}> = { cpu: '1', memory: '256Mi' };
+
+createAutoscaledApplication({
+  resourcePrefix: 'bg-',
+  name: `${name}-bg`,
+  namespace,
+  version: imageTag,
+  serviceAccount: k8sServiceAccount,
+  containers: [
+    {
+      name: 'app',
+      image,
+      env: [
+        ...convertRecordToContainerEnvVars({ secretName: name, data: envVars }),
+        { name: 'MODE', value: 'background' },
+      ],
+      resources: {
+        requests: bgLimits,
+        limits: bgLimits,
+      },
+    },
+  ],
+  maxReplicas: 10,
+  metrics: [
+    {
+      external: {
+        metric: {
+          name: getPubSubUndeliveredMessagesMetric(),
+          selector: {
+            matchLabels: {
+              [getFullSubscriptionLabel('app')]: name,
+            },
+          },
+        },
+        target: {
+          type: 'Value',
+          averageValue: '20',
+        },
+      },
+      type: 'External',
+    },
+  ],
+  deploymentDependsOn: [migrationJob],
 });
 
 const getDebeziumProps = async (): Promise<string> => {

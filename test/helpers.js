@@ -8,23 +8,21 @@ export const mockMessage = (
   data,
 ) => {
   const message = {
-    data: base64(JSON.stringify(data)),
+    data: Buffer.from(base64(JSON.stringify(data)), 'base64'),
     messageId: '1',
   };
   return { message };
 };
 
 export const invokeBackground = (
-  request,
   worker,
   data,
-) => request.post(`/${worker.subscription}`).send(mockMessage(data));
+) => worker.handler(mockMessage(data), console);
 
 export const expectSuccessfulBackground = (
-  request,
   worker,
   data,
-) => invokeBackground(request, worker, data).expect(204);
+) => invokeBackground(worker, data);
 
 export const mockChangeMessage = ({
   before,

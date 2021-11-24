@@ -1,7 +1,5 @@
-import supertest from 'supertest';
 import { expect } from 'chai';
 import flagsmith from 'flagsmith-nodejs';
-import app from '../../src/background';
 import worker from '../../src/workers/clearFeaturesCache';
 import { expectSuccessfulBackground, mockChangeMessage, mockFeatureFlagForUser } from '../helpers';
 import redis, { deleteKeysByPattern } from '../../src/redis';
@@ -19,20 +17,8 @@ const countByPattern = (pattern) => new Promise((resolve, reject) => {
 });
 
 describe('clear features cache', () => {
-  let request;
-  let server;
-
-  before(() => {
-    server = app.listen();
-    request = supertest(server);
-  });
-
   beforeEach(async () => {
     await deleteKeysByPattern('*');
-  });
-
-  after(() => {
-    server.close();
   });
 
   it('should delete features cache', async () => {
@@ -42,7 +28,6 @@ describe('clear features cache', () => {
     await flagsmith.getFlagsForUser('2');
     expect(await countByPattern('features:*')).to.equal(2);
     await expectSuccessfulBackground(
-      request,
       worker,
       mockChangeMessage({
         after,
