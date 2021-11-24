@@ -170,6 +170,10 @@ createKubernetesSecretFromRecord({
   namespace,
 });
 
+const probe = {
+  httpGet: { path: '/health', port: 'http' },
+};
+
 createAutoscaledExposedApplication({
   name,
   namespace: namespace,
@@ -180,9 +184,8 @@ createAutoscaledExposedApplication({
       name: 'app',
       image,
       ports: [{ name: 'http', containerPort: 3000, protocol: 'TCP' }],
-      readinessProbe: {
-        httpGet: { path: '/health', port: 'http' },
-      },
+      readinessProbe: probe,
+      livenessProbe: probe,
       env: convertRecordToContainerEnvVars({ secretName: name, data: envVars }),
       resources: {
         requests: limits,
@@ -219,6 +222,7 @@ createAutoscaledApplication({
       },
     },
   ],
+  minReplicas: 1,
   maxReplicas: 10,
   metrics: [
     {
