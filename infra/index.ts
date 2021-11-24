@@ -1,4 +1,5 @@
 import * as gcp from '@pulumi/gcp';
+import * as k8s from '@pulumi/kubernetes';
 import { Input, Output } from '@pulumi/pulumi';
 import {
   addLabelsToWorkers,
@@ -170,8 +171,9 @@ createKubernetesSecretFromRecord({
   namespace,
 });
 
-const probe = {
+const probe: k8s.types.input.core.v1.Probe = {
   httpGet: { path: '/health', port: 'http' },
+  initialDelaySeconds: 5,
 };
 
 createAutoscaledExposedApplication({

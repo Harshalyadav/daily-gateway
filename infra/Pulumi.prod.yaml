@@ -11,9 +11,9 @@ config:
     apiSecret:
       secure: AAABAHQnHsfEQMSAZQTxPGaQDcrBRcfzyt0k+QSgtkLpYyDea1jkA20rW+VsbtDDY8jndj21NIiTJVws+6OjYA==
     apiUrl:
-      secure: AAABAB/mdJtHwEJHG7a1sSDbZ2DOhtZ+vXWPLb733WTuoLcyczvEOyOBs9eS3idmDgsqNhN2FKPbks22KnGTjaLcjA==
+      secure: AAABADdHghD5xRqLfDsKmgWDOivqiwUwN9QxCF7Bqh8z6Uo43/oR83C0
     besticonUrl:
-      secure: AAABANpo82ytZdV9iRfHt/WmNxYmWsYo8NJo434UWgdTEJVAkf8wv+mL+gm8dVSzrZsiDcnWUba/6YLv56mnH5hkM5TfEqvl
+      secure: AAABAL3ip6o8hb2h0a1ProB1IJa39uA6Wq6GNvgqgl2q897sEelsZ598LBmuF/hNcA==
     bluesnapApiKey:
       secure: AAABAE9336OB57NA7G/WNNwosVg54gsWU14xH9yogu1+DOUIcLO7Q31dfBTy4KLxy6xtG2bVByjXA5joL6N/jYpu3DeFiyfFShlYVYsF4hilfKOv0iJUqhQxr8/WS4Xt+X/VG6L0
     bluesnapApiUrl:
@@ -49,7 +49,7 @@ config:
     jwtSecret:
       secure: AAABANCCeArTMMer7h3/MMcQCgWfGnBeJ8rICqwCs1zIapUKGY/yoo9HjsUtThAGCEk33w==
     monetizationUrl:
-      secure: AAABAFEbAAYRBktbav+OJPW+T2fS0wjfkDozlV8w5DMBQIerfB90CnODXPyW/uofmpVf+PN+GpYUeBYUfqvR1uKBSnHjQpoF90Y8tg==
+      secure: AAABADsZxoQN01o2UViaCkvADOAQkwKj8FygPMea0xpxdB2ty2ss+N/OeovlQtsJC1fx
     mysqlDatabase:
       secure: AAABABKrWGpfvg3lEUkoIxxdN9PF6F6WGBafmZPFTnKYphP/Cuh1
     mysqlHost:
@@ -62,7 +62,7 @@ config:
     primaryAuthOrigin:
       secure: AAABAPgfSLaY8dovND6oiOibCpQMLkOM5mnmVr9y91Hg3eSztUZTONPUEDzyQnDFN+2DDRE=
     redirectorUrl:
-      secure: AAABAEAyW3AUFYnWCDUQ+o0ivIlZ08WzPVaD2SeBd8WGDR/f+mQFx1NZ11dLC5NWJFUtX7Xxp63tZ6iseM5oRyRXYJjSWiKKXQg=
+      secure: AAABAFGcf76hMDEGDsmq1XF9nwhXAxyMZoaOo7OLd/U51KeVwoGn33Hh
     refreshTokenSalt:
       secure: AAABAN8fYWhqDOfEsFnP7c80sAwpRlT1mcikAj1SkXD9+lo3kSdRZYXB3N1BgY2DnTgy1C9F5SiU
     refreshTokenSecret:
@@ -70,7 +70,7 @@ config:
     scraperSecret:
       secure: AAABADwlJPl9DLH+dCCKz+MR4gVpDNc8Nn7XnUldradO2QSy+1VS2BJO2+lcvDBO9EE9j2g/+N6EUSNiO6SoClxR571+by7E/ZlVOjNUN4IRGrz79eFDFIi6JdxQ9cA=
     scraperUrl:
-      secure: AAABAOWJkaTK3zzMW3Wty8VfWdU1fHEM6+wIqxRBFo4YKmcyiLis5h3LhAXqYGzk3b+aO3tkrmfPxUr5Kt+WR3tddibol6M=
+      secure: AAABAMPSuNNSBFrLNxYLxSH8qbyX3DDw22ntVV0310NBDoFirG1wIrR1Y7EuIw==
     sendgridApiKey:
       secure: AAABAL2fT0TA7VJ86QZJcEtLjbGqiykyrtPYQrhbZWunhI9LHo1jvlJdtfeZd23LUg1KEgvEgrWhlfaFCWuTjhhrEJ10Sd5nKyDexnXWTnLX9xjl8G6J/hE+ni+oAAxNJpIxnjg=
     slackWebhook:

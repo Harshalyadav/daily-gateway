@@ -13,9 +13,6 @@ if (isBackground) {
 } else {
   const app = foreground;
   const server = app.listen(config.port);
-
-  if (process.env.KEEP_ALIVE_TIMEOUT) {
-    server.keepAliveTimeout = parseInt(process.env.KEEP_ALIVE_TIMEOUT, 10);
-  }
+  server.keepAliveTimeout = 650 * 1000;
   logger.info(`server is listening to ${config.port}`);
 }
