@@ -142,6 +142,7 @@ const config = {
     port: parseInt(process.env.REDIS_PORT, 10) || 6379,
     password: process.env.REDIS_PASS,
   },
+  analyticsUrl: process.env.ANALYTICS_URL || 'http://localhost:5004',
 };
 
 export default config;

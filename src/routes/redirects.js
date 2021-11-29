@@ -1,7 +1,9 @@
 import Router from 'koa-router';
 import validator, { string, object } from 'koa-context-validator';
+import rp from 'request-promise-native';
 import config from '../config';
 import { addSubdomainOpts } from '../cookies';
+import { bootSharedLogic } from './boot';
 
 const router = Router();
 
@@ -13,6 +15,49 @@ const setReferral = (ctx) => {
       config.cookies.referral.key, referral,
       addSubdomainOpts(ctx, config.cookies.referral.opts),
     );
+  }
+};
+
+const generateEventId = (now) => {
+  const randomStr = (Math.random() + 1).toString(36).substring(8);
+  const timePart = (now.getTime() / 1000).toFixed(0);
+  return `${timePart}${randomStr}`;
+};
+
+const sendAnalyticsEvent = async (ctx) => {
+  try {
+    const boot = await bootSharedLogic(ctx, false);
+    const { query } = ctx.request;
+    const queryStr = JSON.stringify(query);
+    const now = new Date();
+    const events = [{
+      event_timestamp: now,
+      event_id: generateEventId(now),
+      event_name: 'page view',
+      event_page: '/get',
+      app_platform: 'redirector',
+      query_params: queryStr.length > 2 ? queryStr : undefined,
+      session_id: boot.visit.sessionId,
+      user_first_visit: boot.user.firstVisit,
+      user_id: boot.user.id,
+      visit_id: boot.visit.visitId,
+      utm_campaign: query?.utm_campaign,
+      utm_content: query?.utm_content,
+      utm_medium: query?.utm_medium,
+      utm_source: query?.utm_source,
+      utm_term: query?.utm_term,
+      page_referrer: ctx.headers.referer,
+    }];
+    await rp({
+      method: 'POST',
+      url: `${config.analyticsUrl}/e`,
+      body: JSON.stringify({ events }),
+      headers: {
+        'content-type': 'application/json',
+      },
+    });
+  } catch (err) {
+    ctx.log.error({ err }, 'failed to send analytics event');
   }
 };
 
@@ -35,11 +80,6 @@ router.get(
 
 router.get(
   ['/download', '/get'],
-  validator({
-    query: object().keys({
-      r: string(),
-    }).unknown(),
-  }),
   async (ctx) => {
     ctx.status = 307;
 
@@ -49,6 +89,7 @@ router.get(
     }
 
     setReferral(ctx);
+    await sendAnalyticsEvent(ctx);
 
     if (ctx.userAgent.browser.toLowerCase() === 'firefox') {
       ctx.redirect(`https://addons.mozilla.org/en-US/firefox/addon/daily/?${ctx.request.querystring}`);
