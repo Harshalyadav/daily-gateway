@@ -169,4 +169,10 @@ router.get('/', async (ctx) => {
   };
 });
 
+router.get('/features', async (ctx) => {
+  const flags = await getFeaturesForUser(ctx);
+  ctx.status = 200;
+  ctx.body = flags;
+});
+
 export default router;
