@@ -3,7 +3,15 @@ import supertest from 'supertest';
 import nock from 'nock';
 import { expect } from 'chai';
 import db, { migrate } from '../../../src/db';
-import redis, { deleteKeysByPattern, getAlertsKey, ALERTS_DEFAULT } from '../../../src/redis';
+import {
+  deleteKeysByPattern,
+  ALERTS_DEFAULT,
+  SETTINGS_DEFAULT,
+  setRedisObject,
+  getUserRedisObjectKey,
+  ALERTS_PREFIX,
+  SETTINGS_PREFIX,
+} from '../../../src/redis';
 import app from '../../../src';
 import { sign } from '../../../src/jwt';
 import { mockFeatureFlagForUser } from '../../helpers';
@@ -16,6 +24,28 @@ import config from '../../../src/config';
 
 const mustContainKeysRegex = (keys) => `^${keys.map((key) => `(?=.*\\b${key}\\b)`).join('')}.*$`;
 
+const mockAlertsApi = (
+  expected = { filter: true },
+  requiredQueryKeys = ['userAlerts', 'filter'],
+) => {
+  const queryRegExp = new RegExp(mustContainKeysRegex(requiredQueryKeys));
+
+  nock(config.apiUrl)
+    .post('/graphql', queryRegExp)
+    .reply(200, `{ "data": { "userAlerts": ${JSON.stringify(expected)} } }`);
+};
+
+const mockSettingsApi = (
+  expected = { filter: false },
+  requiredQueryKeys = ['userSettings', 'theme', 'spaciness'],
+) => {
+  const queryRegExp = new RegExp(mustContainKeysRegex(requiredQueryKeys));
+
+  nock(config.apiUrl)
+    .post('/graphql', queryRegExp)
+    .reply(200, `{ "data": { "userSettings": ${JSON.stringify(expected)} } }`);
+};
+
 describe('boot routes', () => {
   let request;
   let server;
@@ -25,6 +55,7 @@ describe('boot routes', () => {
     await knexCleaner.clean(db, { ignoreTables: ['knex_migrations', 'knex_migrations_lock'] });
     await deleteKeysByPattern('features:*');
     await deleteKeysByPattern('alerts:*');
+    await deleteKeysByPattern('settings:*');
     await userModel.add('1', 'John', 'john@daily.dev', 'https://daily.dev/john.jpg');
     await userModel.update('1', { username: 'john' });
     await provider.add('1', 'github', 'github_id');
@@ -50,11 +81,50 @@ describe('boot routes', () => {
     expect(res.body.alerts.filter).to.be.equals(true);
   });
 
-  it('should return alerts value accurately from cache', async () => {
-    const expected = { ...ALERTS_DEFAULT, filter: false };
-    const key = getAlertsKey('1');
+  it('should return settings default values if user is not logged in', async () => {
+    const res = await request
+      .get('/boot')
+      .expect(200);
 
-    await redis.set(key, JSON.stringify(expected));
+    expect(res.body.settings).to.deep.equals(SETTINGS_DEFAULT);
+  });
+
+  it('should return settings value accurately from cache', async () => {
+    const userId = '1';
+    const updates = { theme: 'bright', spaciness: 'cozy' };
+    const expected = { ...SETTINGS_DEFAULT, ...updates };
+    const key = getUserRedisObjectKey(SETTINGS_PREFIX, userId);
+
+    await setRedisObject(key, updates);
+
+    const res = await request
+      .get('/boot')
+      .set('Cookie', [`da3=${accessToken.token}`])
+      .expect(200);
+
+    expect(res.body.settings).to.deep.equal(expected);
+  });
+
+  it('should return settings value from api if cache is empty', async () => {
+    const expected = { ...SETTINGS_DEFAULT, theme: 'bright' };
+
+    mockAlertsApi();
+    mockSettingsApi(expected);
+
+    const res = await request
+      .get('/boot')
+      .set('Cookie', [`da3=${accessToken.token}`])
+      .expect(200);
+
+    expect(res.body.settings).to.deep.equal(expected);
+  });
+
+  it('should return alerts value accurately from cache', async () => {
+    const userId = '1';
+    const expected = { ...ALERTS_DEFAULT, filter: false };
+    const key = getUserRedisObjectKey(ALERTS_PREFIX, userId);
+
+    await setRedisObject(key, expected);
 
     const res = await request
       .get('/boot')
@@ -66,12 +136,9 @@ describe('boot routes', () => {
 
   it('should return alerts value from api if cache is empty', async () => {
     const expected = { ...ALERTS_DEFAULT, filter: false };
-    const requiredQueryKeys = ['userAlerts', 'filter'];
-    const queryRegExp = new RegExp(mustContainKeysRegex(requiredQueryKeys));
 
-    nock(config.apiUrl)
-      .post('/graphql', queryRegExp)
-      .reply(200, `{ "data": { "userAlerts": ${JSON.stringify(expected)} } }`);
+    mockAlertsApi(expected);
+    mockSettingsApi();
 
     const res = await request
       .get('/boot')
@@ -117,9 +184,8 @@ describe('boot routes', () => {
           enabled: false,
         },
       },
-      alerts: {
-        filter: true,
-      },
+      alerts: ALERTS_DEFAULT,
+      settings: SETTINGS_DEFAULT,
     });
   });
 
@@ -162,9 +228,8 @@ describe('boot routes', () => {
           enabled: false,
         },
       },
-      alerts: {
-        filter: true,
-      },
+      alerts: ALERTS_DEFAULT,
+      settings: SETTINGS_DEFAULT,
     });
   });
 
@@ -211,9 +276,8 @@ describe('boot routes', () => {
           enabled: false,
         },
       },
-      alerts: {
-        filter: true,
-      },
+      alerts: ALERTS_DEFAULT,
+      settings: SETTINGS_DEFAULT,
     });
   });
 
@@ -240,9 +304,8 @@ describe('boot routes', () => {
           enabled: false,
         },
       },
-      alerts: {
-        filter: true,
-      },
+      alerts: ALERTS_DEFAULT,
+      settings: SETTINGS_DEFAULT,
     });
   });
 
@@ -267,9 +330,8 @@ describe('boot routes', () => {
         firstVisit: res.body.user.firstVisit,
       },
       flags: null,
-      alerts: {
-        filter: true,
-      },
+      alerts: ALERTS_DEFAULT,
+      settings: SETTINGS_DEFAULT,
     });
   });
 

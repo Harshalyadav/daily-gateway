@@ -10,7 +10,14 @@ import role from '../models/role';
 import { setSessionId, setTrackingId } from '../tracking';
 import { ForbiddenError } from '../errors';
 import { getAmplitudeCookie, setAuthCookie } from '../cookies';
-import { getAlerts } from '../redis';
+import { getAlertsFromAPI, getSettingsFromAPI } from '../integration';
+import {
+  ALERTS_DEFAULT,
+  ALERTS_PREFIX,
+  getRedisObject,
+  SETTINGS_DEFAULT,
+  SETTINGS_PREFIX,
+} from '../redis';
 
 const router = Router({
   prefix: '/boot',
@@ -142,6 +149,24 @@ export const bootSharedLogic = async (ctx, shouldRefreshToken) => {
   return returnObject;
 };
 
+const getAlerts = (ctx) => {
+  const getAlertsApi = async () => {
+    const res = await getAlertsFromAPI(ctx);
+    return res.data.userAlerts;
+  };
+
+  return getRedisObject(ctx, ALERTS_PREFIX, ALERTS_DEFAULT, getAlertsApi);
+};
+
+const getSettings = (ctx) => {
+  const getSettingsApi = async () => {
+    const res = await getSettingsFromAPI(ctx);
+    return res.data.userSettings;
+  };
+
+  return getRedisObject(ctx, SETTINGS_PREFIX, SETTINGS_DEFAULT, getSettingsApi);
+};
+
 const getFeaturesForUser = async (ctx) => {
   const trackingId = getTrackingId(ctx);
   if (trackingId) {
@@ -156,16 +181,18 @@ const getFeaturesForUser = async (ctx) => {
 
 router.get('/', async (ctx) => {
   const shouldRefreshToken = await validateRefreshToken(ctx);
-  const [flags, base, alerts] = await Promise.all([
+  const [flags, base, alerts, settings] = await Promise.all([
     getFeaturesForUser(ctx),
     bootSharedLogic(ctx, shouldRefreshToken),
     getAlerts(ctx),
+    getSettings(ctx),
   ]);
   ctx.status = 200;
   ctx.body = {
     ...base,
     flags,
     alerts,
+    settings,
   };
 });
 

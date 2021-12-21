@@ -7,6 +7,7 @@ import eligibleParticipantBoostChances from './eligibleParticipantBoostChances';
 import cdc from './cdc';
 import clearFeaturesCache from './clearFeaturesCache';
 import updateAlerts from './updateAlerts';
+import updateSettings from './updateSettings';
 import deleteUserFromMailingList from './deleteUserFromMailingList';
 
 const workers = [
@@ -19,6 +20,7 @@ const workers = [
   cdc,
   clearFeaturesCache,
   updateAlerts,
+  updateSettings,
   deleteUserFromMailingList,
 ];
 
