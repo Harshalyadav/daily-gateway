@@ -1,14 +1,26 @@
 import rp from 'request-promise-native';
 import config from './config';
 
-export const getFromDailyApi = async (ctx, query, headers = {}) => {
+const getHeaders = (ctx) => {
+  if (!ctx.state.user || !ctx.state.user.userId) {
+    return {};
+  }
+
+  return {
+    authorization: `Service ${config.apiSecret}`,
+    'logged-in': true,
+    'user-id': ctx.state.user.userId,
+  };
+};
+
+export const getFromDailyApi = async (ctx, query) => {
+  const headers = getHeaders(ctx);
   const res = await rp({
     method: 'POST',
     url: `${config.apiUrl}/graphql`,
     body: JSON.stringify({ query }),
     headers: {
       ...headers,
-      cookie: ctx.request.header.cookie,
       'content-type': 'application/json',
     },
   });
@@ -17,7 +29,6 @@ export const getFromDailyApi = async (ctx, query, headers = {}) => {
 };
 
 export const getSettingsFromAPI = (ctx) => {
-  const headers = { authorization: `Service ${config.apiSecret}` };
   const query = `{
     userSettings {
       openNewTab
@@ -30,11 +41,10 @@ export const getSettingsFromAPI = (ctx) => {
     }
   }`;
 
-  return getFromDailyApi(ctx, query, headers);
+  return getFromDailyApi(ctx, query);
 };
 
 export const getAlertsFromAPI = (ctx) => {
-  const headers = { authorization: `Service ${config.apiSecret}` };
   const query = `{
     userAlerts {
       filter
@@ -42,5 +52,5 @@ export const getAlertsFromAPI = (ctx) => {
     }
   }`;
 
-  return getFromDailyApi(ctx, query, headers);
+  return getFromDailyApi(ctx, query);
 };
