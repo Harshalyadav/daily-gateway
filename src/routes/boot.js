@@ -11,6 +11,7 @@ import { setSessionId, setTrackingId } from '../tracking';
 import { ForbiddenError } from '../errors';
 import { getAmplitudeCookie, setAuthCookie } from '../cookies';
 import { getAlertsFromAPI, getSettingsFromAPI } from '../integration';
+import { excludeProperties } from '../common';
 import {
   ALERTS_DEFAULT,
   ALERTS_PREFIX,
@@ -149,22 +150,30 @@ export const bootSharedLogic = async (ctx, shouldRefreshToken) => {
   return returnObject;
 };
 
-const getAlerts = (ctx) => {
+const excludedBootProperties = ['userId'];
+
+const getAlerts = async (ctx) => {
   const getAlertsApi = async () => {
     const res = await getAlertsFromAPI(ctx);
     return res.data.userAlerts;
   };
 
-  return getRedisObject(ctx, ALERTS_PREFIX, ALERTS_DEFAULT, getAlertsApi);
+  const rawAlerts = await getRedisObject(ctx, ALERTS_PREFIX, ALERTS_DEFAULT, getAlertsApi);
+  const alerts = excludeProperties(rawAlerts, excludedBootProperties);
+
+  return alerts;
 };
 
-const getSettings = (ctx) => {
+const getSettings = async (ctx) => {
   const getSettingsApi = async () => {
     const res = await getSettingsFromAPI(ctx);
     return res.data.userSettings;
   };
 
-  return getRedisObject(ctx, SETTINGS_PREFIX, SETTINGS_DEFAULT, getSettingsApi);
+  const rawSettings = await getRedisObject(ctx, SETTINGS_PREFIX, SETTINGS_DEFAULT, getSettingsApi);
+  const settings = excludeProperties(rawSettings, [...excludedBootProperties, 'updatedAt']);
+
+  return settings;
 };
 
 const getFeaturesForUser = async (ctx) => {
@@ -187,6 +196,7 @@ router.get('/', async (ctx) => {
     getAlerts(ctx),
     getSettings(ctx),
   ]);
+
   ctx.status = 200;
   ctx.body = {
     ...base,
