@@ -9,3 +9,6 @@ cron.yaml
 # local env files
 .env.development
 .env.*.development
+
+debezium/conf/key.json
+debezium/data
