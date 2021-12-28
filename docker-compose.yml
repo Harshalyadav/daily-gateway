@@ -6,9 +6,14 @@ volumes:
 
 services:
   daily-mysql:
-    image: gcr.io/daily-ops/mysql
+    image: mariadb
     ports:
       - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: gateway
+      MYSQL_PASSWORD: root
+    command: --log-bin=mysqld-bin --binlog-format=ROW
     volumes:
       - db:/var/lib/mysql
   redis:
