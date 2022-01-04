@@ -20,6 +20,7 @@ import premium from './routes/premium';
 import contests from './routes/referrals';
 import flagsmith from './routes/flagsmith';
 import boot from './routes/boot';
+import privateRoutes from './routes/private';
 
 const app = new Koa();
 
@@ -77,6 +78,7 @@ app.use((ctx, next) => {
 });
 
 app.use(health.routes(), health.allowedMethods());
+app.use(privateRoutes.routes(), privateRoutes.allowedMethods());
 
 app.use(verifyTracking);
 
