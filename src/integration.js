@@ -49,6 +49,7 @@ export const getAlertsFromAPI = (ctx) => {
     userAlerts {
       filter
       rankLastSeen
+      myFeed
     }
   }`;
 
