@@ -8,8 +8,11 @@ const router = Router({
 
 router.post('/reset', async (ctx) => {
   const { key } = ctx.request.query;
-  if (key === config.flagsmithKey) {
+  if (key === config.flagsmithWebhookSecret) {
+    ctx.log.info('sending features reset message');
     await publishEvent(featuresResetTopic, {});
+  } else {
+    ctx.log.info('wrong webhook key');
   }
   ctx.status = 204;
 });
