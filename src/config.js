@@ -136,7 +136,7 @@ const config = {
   },
   amplitudeKey: process.env.AMPLITUDE_KEY || '',
   flagsmithKey: process.env.FLAGSMITH_KEY || 'key',
-  flagsmithWebhookSecret: process.env.FLAGSMITH_WEBHOOK_SECRET || '',
+  flagsmithWebhookSecret: process.env.FLAGSMITH_WEBHOOK_SECRET || 'webhook',
   redis: {
     host: process.env.REDIS_HOST || 'localhost',
     port: parseInt(process.env.REDIS_PORT, 10) || 6379,

@@ -38,7 +38,7 @@ describe('flagsmith routes', () => {
 
   it('should publish pubsub event', async () => {
     await request
-      .post('/flagsmith/reset?key=key')
+      .post('/flagsmith/reset?key=webhook')
       .expect(204);
 
     expect(publishEventStub.calledWith(featuresResetTopic, {})).to.be.ok;
