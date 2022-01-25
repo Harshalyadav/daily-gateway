@@ -37,13 +37,10 @@ const mockAlertsApi = (
 
 const mockSettingsApi = (
   expected = { filter: false },
-  requiredQueryKeys = ['userSettings', 'theme', 'spaciness'],
 ) => {
-  const queryRegExp = new RegExp(mustContainKeysRegex(requiredQueryKeys));
-
   nock(config.apiUrl)
-    .post('/graphql', queryRegExp)
-    .reply(200, `{ "data": { "userSettings": ${JSON.stringify(expected)} } }`);
+    .get('/settings')
+    .reply(200, JSON.stringify(expected));
 };
 
 describe('boot routes', () => {

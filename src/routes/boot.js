@@ -165,10 +165,7 @@ const getAlerts = async (ctx) => {
 };
 
 const getSettings = async (ctx) => {
-  const getSettingsApi = async () => {
-    const res = await getSettingsFromAPI(ctx);
-    return res.data.userSettings;
-  };
+  const getSettingsApi = () => getSettingsFromAPI(ctx);
 
   const rawSettings = await getRedisObject(ctx, SETTINGS_PREFIX, SETTINGS_DEFAULT, getSettingsApi);
   const settings = excludeProperties(rawSettings, [...excludedBootProperties, 'updatedAt']);

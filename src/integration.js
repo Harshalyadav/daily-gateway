@@ -13,12 +13,12 @@ const getHeaders = (ctx) => {
   };
 };
 
-export const getFromDailyApi = async (ctx, query) => {
+const getFromDailyApi = async (ctx, method, route, params = {}) => {
   const headers = getHeaders(ctx);
   const res = await rp({
-    method: 'POST',
-    url: `${config.apiUrl}/graphql`,
-    body: JSON.stringify({ query }),
+    method,
+    url: config.apiUrl + route,
+    body: JSON.stringify(params),
     headers: {
       ...headers,
       'content-type': 'application/json',
@@ -28,21 +28,9 @@ export const getFromDailyApi = async (ctx, query) => {
   return JSON.parse(res);
 };
 
-export const getSettingsFromAPI = (ctx) => {
-  const query = `{
-    userSettings {
-      openNewTab
-      showOnlyUnreadPosts
-      theme
-      spaciness
-      insaneMode
-      showTopSites
-      sidebarExpanded
-    }
-  }`;
+export const getFromDailyGraphQLApi = (ctx, query) => getFromDailyApi(ctx, 'POST', '/graphql', { query });
 
-  return getFromDailyApi(ctx, query);
-};
+export const getSettingsFromAPI = (ctx) => getFromDailyApi(ctx, 'GET', '/settings');
 
 export const getAlertsFromAPI = (ctx) => {
   const query = `{
@@ -53,5 +41,5 @@ export const getAlertsFromAPI = (ctx) => {
     }
   }`;
 
-  return getFromDailyApi(ctx, query);
+  return getFromDailyGraphQLApi(ctx, query);
 };
