@@ -22,17 +22,12 @@ import refreshTokenModel from '../../../src/models/refreshToken';
 import visit from '../../../src/models/visit';
 import config from '../../../src/config';
 
-const mustContainKeysRegex = (keys) => `^${keys.map((key) => `(?=.*\\b${key}\\b)`).join('')}.*$`;
-
 const mockAlertsApi = (
   expected = { filter: true },
-  requiredQueryKeys = ['userAlerts', 'filter'],
 ) => {
-  const queryRegExp = new RegExp(mustContainKeysRegex(requiredQueryKeys));
-
   nock(config.apiUrl)
-    .post('/graphql', queryRegExp)
-    .reply(200, `{ "data": { "userAlerts": ${JSON.stringify(expected)} } }`);
+    .get('/alerts')
+    .reply(200, JSON.stringify(expected));
 };
 
 const mockSettingsApi = (

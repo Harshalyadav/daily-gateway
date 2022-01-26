@@ -32,14 +32,4 @@ export const getFromDailyGraphQLApi = (ctx, query) => getFromDailyApi(ctx, 'POST
 
 export const getSettingsFromAPI = (ctx) => getFromDailyApi(ctx, 'GET', '/settings');
 
-export const getAlertsFromAPI = (ctx) => {
-  const query = `{
-    userAlerts {
-      filter
-      rankLastSeen
-      myFeed
-    }
-  }`;
-
-  return getFromDailyGraphQLApi(ctx, query);
-};
+export const getAlertsFromAPI = (ctx) => getFromDailyApi(ctx, 'GET', '/alerts');

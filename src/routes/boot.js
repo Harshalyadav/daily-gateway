@@ -153,10 +153,7 @@ export const bootSharedLogic = async (ctx, shouldRefreshToken) => {
 const excludedBootProperties = ['userId'];
 
 const getAlerts = async (ctx) => {
-  const getAlertsApi = async () => {
-    const res = await getAlertsFromAPI(ctx);
-    return res.data.userAlerts;
-  };
+  const getAlertsApi = () => getAlertsFromAPI(ctx);
 
   const rawAlerts = await getRedisObject(ctx, ALERTS_PREFIX, ALERTS_DEFAULT, getAlertsApi);
   const alerts = excludeProperties(rawAlerts, excludedBootProperties);
