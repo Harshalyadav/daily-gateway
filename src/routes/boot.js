@@ -165,7 +165,7 @@ const getSettings = async (ctx) => {
   const getSettingsApi = () => getSettingsFromAPI(ctx);
 
   const rawSettings = await getRedisObject(ctx, SETTINGS_PREFIX, SETTINGS_DEFAULT, getSettingsApi);
-  const settings = excludeProperties(rawSettings, [...excludedBootProperties, 'updatedAt']);
+  const settings = excludeProperties(rawSettings, [...excludedBootProperties, 'updatedAt', 'bookmarkSlug']);
 
   return settings;
 };
