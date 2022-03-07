@@ -4,16 +4,19 @@ import { Input, Output } from '@pulumi/pulumi';
 import {
   addLabelsToWorkers,
   config,
-  convertRecordToContainerEnvVars, createAutoscaledApplication,
+  convertRecordToContainerEnvVars,
+  createAutoscaledApplication,
   createAutoscaledExposedApplication,
   createK8sServiceAccountFromGCPServiceAccount,
   createKubernetesSecretFromRecord,
   createMigrationJob,
   createServiceAccountAndGrantRoles,
   createSubscriptionsFromWorkers,
-  deployDebeziumToKubernetes, getFullSubscriptionLabel,
+  deployDebeziumToKubernetes,
+  getFullSubscriptionLabel,
   getImageTag,
-  getMemoryAndCpuMetrics, getPubSubUndeliveredMessagesMetric,
+  getMemoryAndCpuMetrics,
+  getPubSubUndeliveredMessagesMetric,
   k8sServiceAccountToIdentity,
   location,
 } from '@dailydotdev/pulumi-common';
@@ -77,7 +80,10 @@ const envVars: Record<string, Input<string>> = {
   redisPort: redis.port.apply((port) => port.toString()),
 };
 
-const containerEnvVars = convertRecordToContainerEnvVars({ secretName: name, data: envVars });
+const containerEnvVars = convertRecordToContainerEnvVars({
+  secretName: name,
+  data: envVars,
+});
 
 createKubernetesSecretFromRecord({
   data: envVars,
@@ -102,7 +108,7 @@ const limits: Input<{
   memory: '512Mi',
 };
 
-const topics = ['features-reset'].map(
+const topics = ['features-reset', 'username-changed'].map(
   (topic) => new gcp.pubsub.Topic(topic, { name: topic }),
 );
 
@@ -155,10 +161,7 @@ createAutoscaledApplication({
     {
       name: 'app',
       image,
-      env: [
-        ...containerEnvVars,
-        { name: 'MODE', value: 'background' },
-      ],
+      env: [...containerEnvVars, { name: 'MODE', value: 'background' }],
       resources: {
         requests: bgLimits,
         limits: bgLimits,

@@ -3,6 +3,7 @@ import {
   participantEligilbleTopic,
   publishEvent,
   userDeletedTopic,
+  usernameChangedTopic,
   userRegisteredTopic,
   userUpdatedTopic,
 } from '../pubsub';
@@ -21,6 +22,13 @@ const onUserChange = async (log, data) => {
       } else if (data.payload.op === 'u') {
         await publishEvent(userUpdatedTopic,
           { user: data.payload.before, newProfile: after });
+        if (data.payload.before.username !== data.payload.after.username) {
+          await publishEvent(usernameChangedTopic, {
+            userId: data.payload.after.id,
+            oldUsername: data.payload.before.username,
+            newUsername: data.payload.after.username,
+          });
+        }
       }
     }
   }
