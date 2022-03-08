@@ -10,7 +10,11 @@ import role from '../models/role';
 import { setSessionId, setTrackingId } from '../tracking';
 import { ForbiddenError } from '../errors';
 import { getAmplitudeCookie, setAuthCookie } from '../cookies';
-import { getAlertsFromAPI, getSettingsFromAPI } from '../integration';
+import {
+  getAlertsFromAPI,
+  getSettingsFromAPI,
+  getFromDailyGraphQLApi,
+} from '../integration';
 import { excludeProperties } from '../common';
 import {
   ALERTS_DEFAULT,
@@ -40,14 +44,23 @@ const updateUserVisit = async (ctx, now, referral, trackingId) => {
   }
   const app = ctx.request.get('app');
   if (app === 'extension' || app === 'web') {
-    const referrer = referral ? await userModel.getByIdOrUsername(referral) : {};
+    const referrer = referral
+      ? await userModel.getByIdOrUsername(referral)
+      : {};
     await visit.upsert(trackingId, app, now, now, referrer?.id, ctx.request.ip);
   }
 };
 
 const getTimeOrMax = (time) => time?.getTime?.() || Number.MAX_VALUE;
 
-const bootBaseResponse = async (ctx, visitId, visitPromise, now, referral, user = null) => {
+const bootBaseResponse = async (
+  ctx,
+  visitId,
+  visitPromise,
+  now,
+  referral,
+  user = null,
+) => {
   const visitObject = visitPromise ? await visitPromise : null;
   const baseResponse = {
     visit: {
@@ -64,7 +77,10 @@ const bootBaseResponse = async (ctx, visitId, visitPromise, now, referral, user 
     return {
       ...baseResponse,
       user: {
-        firstVisit: firstVisitEpoch < Number.MAX_VALUE ? new Date(firstVisitEpoch) : undefined,
+        firstVisit:
+          firstVisitEpoch < Number.MAX_VALUE
+            ? new Date(firstVisitEpoch)
+            : undefined,
         referrer: visitObject.referral,
       },
     };
@@ -98,7 +114,10 @@ export const bootSharedLogic = async (ctx, shouldRefreshToken) => {
   generateSessionId(ctx);
   const now = new Date();
   const visitPromise = trackingId && visit.getFirstVisitAndReferral(trackingId);
-  const referral = ctx.cookies.get(config.cookies.referral.key, config.cookies.referral.opts);
+  const referral = ctx.cookies.get(
+    config.cookies.referral.key,
+    config.cookies.referral.opts,
+  );
   let returnObject;
   if (ctx.state.user) {
     const { userId } = ctx.state.user;
@@ -113,9 +132,18 @@ export const bootSharedLogic = async (ctx, shouldRefreshToken) => {
       throw new ForbiddenError();
     }
 
-    const accessToken = shouldRefreshToken ? await setAuthCookie(ctx, user, roles) : undefined;
+    const accessToken = shouldRefreshToken
+      ? await setAuthCookie(ctx, user, roles)
+      : undefined;
 
-    const base = await bootBaseResponse(ctx, visitId, visitPromise, now, referral, user);
+    const base = await bootBaseResponse(
+      ctx,
+      visitId,
+      visitPromise,
+      now,
+      referral,
+      user,
+    );
     returnObject = {
       ...base,
       user: {
@@ -134,7 +162,13 @@ export const bootSharedLogic = async (ctx, shouldRefreshToken) => {
       };
     }
   } else {
-    const base = await bootBaseResponse(ctx, visitId, visitPromise, now, referral);
+    const base = await bootBaseResponse(
+      ctx,
+      visitId,
+      visitPromise,
+      now,
+      referral,
+    );
     returnObject = {
       ...base,
       user: {
@@ -144,8 +178,7 @@ export const bootSharedLogic = async (ctx, shouldRefreshToken) => {
     };
   }
 
-  updateUserVisit(ctx, now, referral, trackingId)
-    .catch((err) => ctx.log.error({ err }, `failed to update visit for ${trackingId}`));
+  updateUserVisit(ctx, now, referral, trackingId).catch((err) => ctx.log.error({ err }, `failed to update visit for ${trackingId}`));
 
   return returnObject;
 };
@@ -155,7 +188,12 @@ const excludedBootProperties = ['userId'];
 const getAlerts = async (ctx) => {
   const getAlertsApi = () => getAlertsFromAPI(ctx);
 
-  const rawAlerts = await getRedisObject(ctx, ALERTS_PREFIX, ALERTS_DEFAULT, getAlertsApi);
+  const rawAlerts = await getRedisObject(
+    ctx,
+    ALERTS_PREFIX,
+    ALERTS_DEFAULT,
+    getAlertsApi,
+  );
   const alerts = excludeProperties(rawAlerts, excludedBootProperties);
 
   return alerts;
@@ -164,8 +202,17 @@ const getAlerts = async (ctx) => {
 const getSettings = async (ctx) => {
   const getSettingsApi = () => getSettingsFromAPI(ctx);
 
-  const rawSettings = await getRedisObject(ctx, SETTINGS_PREFIX, SETTINGS_DEFAULT, getSettingsApi);
-  const settings = excludeProperties(rawSettings, [...excludedBootProperties, 'updatedAt', 'bookmarkSlug']);
+  const rawSettings = await getRedisObject(
+    ctx,
+    SETTINGS_PREFIX,
+    SETTINGS_DEFAULT,
+    getSettingsApi,
+  );
+  const settings = excludeProperties(rawSettings, [
+    ...excludedBootProperties,
+    'updatedAt',
+    'bookmarkSlug',
+  ]);
 
   return settings;
 };
@@ -181,6 +228,51 @@ const getFeaturesForUser = async (ctx) => {
   }
   return null;
 };
+
+router.get(
+  '/companion',
+  async (ctx) => {
+    const shouldRefreshToken = await validateRefreshToken(ctx);
+    const [data, base, settings] = await Promise.all([
+      getFromDailyGraphQLApi(ctx, {
+        query: `query Post($url: String) {
+        postByUrl(url: $url) {
+          id
+          title
+          commentsPermalink
+          trending
+          summary
+          numUpvotes
+          upvoted
+          numComments
+          bookmarked
+          source {
+            id
+            name
+            image
+          }
+        }
+      }
+      `,
+        variables: { url: ctx.query.url },
+      }),
+      bootSharedLogic(ctx, shouldRefreshToken),
+      getSettings(ctx),
+    ]);
+
+    if (!data) {
+      ctx.status = 404;
+      return ctx;
+    }
+
+    ctx.body = {
+      ...base,
+      data,
+      settings,
+    };
+    return ctx;
+  },
+);
 
 router.get('/', async (ctx) => {
   const shouldRefreshToken = await validateRefreshToken(ctx);

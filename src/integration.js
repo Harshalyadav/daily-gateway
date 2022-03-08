@@ -28,7 +28,7 @@ const getFromDailyApi = async (ctx, method, route, params = {}) => {
   return JSON.parse(res);
 };
 
-export const getFromDailyGraphQLApi = (ctx, query) => getFromDailyApi(ctx, 'POST', '/graphql', { query });
+export const getFromDailyGraphQLApi = (ctx, query) => getFromDailyApi(ctx, 'POST', '/graphql', query);
 
 export const getSettingsFromAPI = (ctx) => getFromDailyApi(ctx, 'GET', '/settings');
 
