@@ -233,12 +233,14 @@ router.get(
   '/companion',
   async (ctx) => {
     const shouldRefreshToken = await validateRefreshToken(ctx);
-    const [data, base, settings] = await Promise.all([
+    const [data, base, settings, alerts] = await Promise.all([
       getFromDailyGraphQLApi(ctx, {
         query: `query Post($url: String) {
         postByUrl(url: $url) {
           id
           title
+          image
+          permalink
           commentsPermalink
           trending
           summary
@@ -246,10 +248,16 @@ router.get(
           upvoted
           numComments
           bookmarked
+          createdAt
+          readTime
+          tags
           source {
             id
             name
             image
+          }
+          author {
+            id
           }
         }
       }
@@ -258,6 +266,7 @@ router.get(
       }),
       bootSharedLogic(ctx, shouldRefreshToken),
       getSettings(ctx),
+      getAlerts(ctx),
     ]);
 
     if (!data) {
@@ -267,8 +276,9 @@ router.get(
 
     ctx.body = {
       ...base,
-      data,
+      postData: data?.data?.postByUrl,
       settings,
+      alerts,
     };
     return ctx;
   },

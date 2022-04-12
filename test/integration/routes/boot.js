@@ -492,9 +492,10 @@ describe('boot routes', () => {
       .to
       .deep
       .equal({
-        data: {
-          data: POST_DEFAULT,
+        alerts: {
+          filter: true,
         },
+        postData: POST_DEFAULT.postByUrl,
         settings: SETTINGS_DEFAULT,
         user: {
           id: '123',
