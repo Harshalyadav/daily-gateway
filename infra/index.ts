@@ -55,7 +55,7 @@ const { serviceAccount } = createServiceAccountAndGrantRoles(
   ],
 );
 
-const image = `gcr.io/daily-ops/daily-${name}:${imageTag}`;
+const image = `us.gcr.io/daily-ops/daily-${name}:${imageTag}`;
 
 // Create K8S service account and assign it to a GCP service account
 const { namespace } = config.requireObject<{ namespace: string }>('k8s');
