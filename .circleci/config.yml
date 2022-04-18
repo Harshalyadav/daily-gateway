@@ -153,6 +153,7 @@ workflows:
           image: $CIRCLE_PROJECT_REPONAME
           source-tag: $CIRCLE_SHA1
           target-tag: latest
+          registry-url: us.gcr.io
           filters:
             branches:
               only:
