@@ -59,7 +59,7 @@ describe('users routes', () => {
         premium: false,
         acceptedMarketing: true,
         roles: [],
-        reputation: 1,
+        reputation: 10,
         permalink: 'http://localhost:5002/john',
         registrationLink: 'http://localhost:5002/register',
         referralLink: 'https://api.daily.dev/get?r=john',
@@ -90,7 +90,7 @@ describe('users routes', () => {
         premium: false,
         acceptedMarketing: true,
         roles: ['admin', 'moderator'],
-        reputation: 1,
+        reputation: 10,
         permalink: 'http://localhost:5002/john',
         registrationLink: 'http://localhost:5002/register',
         referralLink: 'https://api.daily.dev/get?r=john',
@@ -305,7 +305,7 @@ describe('users routes', () => {
         infoConfirmed: true,
         premium: false,
         acceptedMarketing: true,
-        reputation: 1,
+        reputation: 10,
         referralLink: 'https://api.daily.dev/get?r=id',
         username: 'john',
       });
@@ -334,7 +334,7 @@ describe('users routes', () => {
         infoConfirmed: true,
         premium: false,
         acceptedMarketing: true,
-        reputation: 1,
+        reputation: 10,
         referralLink: 'https://api.daily.dev/get?r=id',
         username: 'john',
         timezone: 'Pacific/Midway',
@@ -364,7 +364,7 @@ describe('users routes', () => {
         infoConfirmed: true,
         premium: false,
         acceptedMarketing: true,
-        reputation: 1,
+        reputation: 10,
         referralLink: 'https://api.daily.dev/get?r=id',
         username: 'john',
         twitter: 'john',
@@ -394,7 +394,7 @@ describe('users routes', () => {
         infoConfirmed: true,
         premium: false,
         acceptedMarketing: true,
-        reputation: 1,
+        reputation: 10,
         referralLink: 'https://api.daily.dev/get?r=id',
         username: 'john',
         github: 'john-acme',
@@ -424,7 +424,7 @@ describe('users routes', () => {
         infoConfirmed: true,
         premium: false,
         acceptedMarketing: true,
-        reputation: 1,
+        reputation: 10,
         referralLink: 'https://api.daily.dev/get?r=id',
         username: 'john',
       });
@@ -632,7 +632,7 @@ describe('users routes', () => {
         username: 'idoshamun',
         bio: 'My bio',
         premium: false,
-        reputation: 1,
+        reputation: 10,
       });
     });
 
@@ -652,7 +652,7 @@ describe('users routes', () => {
         username: 'idoshamun',
         bio: 'My bio',
         premium: false,
-        reputation: 1,
+        reputation: 10,
       });
     });
   });
