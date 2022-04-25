@@ -19,7 +19,7 @@ const onUserChange = async (log, data) => {
       const after = toCamelCase(res[0]);
       if (data.payload.op === 'c') {
         await publishEvent(userRegisteredTopic, after);
-      } else if (data.payload.op === 'u') {
+      } else if (data.payload.op === 'u' && data.payload.before.reputation === data.payload.after.reputation) {
         await publishEvent(userUpdatedTopic,
           { user: data.payload.before, newProfile: after });
         if (data.payload.before.username !== data.payload.after.username) {

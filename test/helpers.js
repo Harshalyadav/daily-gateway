@@ -6,13 +6,10 @@ function base64(i) {
 
 export const mockMessage = (
   data,
-) => {
-  const message = {
-    data: Buffer.from(base64(JSON.stringify(data)), 'base64'),
-    messageId: '1',
-  };
-  return { message };
-};
+) => ({
+  data: Buffer.from(base64(JSON.stringify(data)), 'base64'),
+  messageId: '1',
+});
 
 export const invokeBackground = (
   worker,

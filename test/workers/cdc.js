@@ -78,6 +78,27 @@ describe('cdc', () => {
       })).to.be.ok;
   });
 
+  it('should not notify on user update when reputation changes', async () => {
+    await db.insert(baseUser).into('users');
+    const [user] = await db.select().from('users').where('id', '=', baseUser.id).limit(1);
+    const after = {
+      ...user,
+      reputation: 100,
+    };
+    await db('users').update({ name: after.name }).where('id', '=', baseUser.id);
+    await expectSuccessfulBackground(
+
+      worker,
+      mockChangeMessage({
+        before: user,
+        after,
+        op: 'u',
+        table: 'users',
+      }),
+    );
+    expect(publishEventStub.callCount).to.equal(0);
+  });
+
   it('should notify on username change', async () => {
     await db.insert(baseUser).into('users');
     const [user] = await db.select().from('users').where('id', '=', baseUser.id).limit(1);

@@ -10,6 +10,9 @@ const worker = {
       log.warn({ messageId: message.id, userId: data.user.id }, 'no email in user-updated message');
       return;
     }
+    if (data.newProfile.email === data.user.email) {
+      return;
+    }
     try {
       const lists = ['85a1951f-5f0c-459f-bf5e-e5c742986a50'];
       if (!data.newProfile.acceptedMarketing) {
