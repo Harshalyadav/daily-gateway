@@ -39,6 +39,7 @@ export const SETTINGS_DEFAULT = {
   showOnlyUnreadPosts: false,
   openNewTab: true,
   sidebarExpanded: true,
+  companionExpanded: false,
 };
 export const getRedisObject = async (ctx, prefix, defaultValues, getFromApi) => {
   if (!ctx.state.user) {

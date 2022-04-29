@@ -136,6 +136,27 @@ describe('boot routes', () => {
       .equal(expected);
   });
 
+  it('should return companion expanded value accurately from cache', async () => {
+    const userId = '1';
+    const updates = {
+      companionExpanded: true,
+    };
+    const expected = { ...SETTINGS_DEFAULT, ...updates };
+    const key = getUserRedisObjectKey(SETTINGS_PREFIX, userId);
+
+    await setRedisObject(key, updates);
+
+    const res = await request
+      .get('/boot')
+      .set('Cookie', [`da3=${accessToken.token}`])
+      .expect(200);
+
+    expect(res.body.settings)
+      .to
+      .deep
+      .equal(expected);
+  });
+
   it('should return settings value from api if cache is empty', async () => {
     const expected = {
       ...SETTINGS_DEFAULT,
@@ -471,6 +492,8 @@ describe('boot routes', () => {
   });
 
   it('should return a post based on url', async () => {
+    mockFeatureFlagForUser();
+
     const EXPECTED = {
       data: {
         ...POST_DEFAULT,
@@ -495,6 +518,7 @@ describe('boot routes', () => {
         alerts: {
           filter: true,
         },
+        flags: null,
         postData: POST_DEFAULT.postByUrl,
         settings: SETTINGS_DEFAULT,
         user: {

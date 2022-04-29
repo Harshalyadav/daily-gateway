@@ -229,11 +229,20 @@ const getFeaturesForUser = async (ctx) => {
   return null;
 };
 
+const getCompanionExpandedState = (settings, flags) => {
+  if (settings.companionExpanded === null || settings.companionExpanded === undefined) {
+    const flag = !!flags?.companion_expanded?.enabled;
+    return flag;
+  }
+
+  return settings.companionExpanded;
+};
+
 router.get(
   '/companion',
   async (ctx) => {
     const shouldRefreshToken = await validateRefreshToken(ctx);
-    const [data, base, settings, alerts] = await Promise.all([
+    const [data, base, flags, settings, alerts] = await Promise.all([
       getFromDailyGraphQLApi(ctx, {
         query: `query Post($url: String) {
         postByUrl(url: $url) {
@@ -265,6 +274,7 @@ router.get(
         variables: { url: ctx.query.url },
       }),
       bootSharedLogic(ctx, shouldRefreshToken),
+      getFeaturesForUser(ctx),
       getSettings(ctx),
       getAlerts(ctx),
     ]);
@@ -274,10 +284,13 @@ router.get(
       return ctx;
     }
 
+    settings.companionExpanded = getCompanionExpandedState(settings, flags);
+
     ctx.body = {
       ...base,
       postData: data?.data?.postByUrl,
       settings,
+      flags,
       alerts,
     };
     return ctx;
@@ -292,6 +305,8 @@ router.get('/', async (ctx) => {
     getAlerts(ctx),
     getSettings(ctx),
   ]);
+
+  settings.companionExpanded = getCompanionExpandedState(settings, flags);
 
   ctx.status = 200;
   ctx.body = {
