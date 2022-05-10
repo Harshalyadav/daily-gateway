@@ -4,6 +4,8 @@ config:
   gateway:debeziumDbUser:
     secure: AAABAD3UsX0N4DL09nVRVJZ2uM/6FaENmEOzbwj8XFNfLZxVb9KGuQ==
   gateway:env:
+    submitArticleThreshold:
+      secure: AAABAEwxMDWanfaCtFU+qxqTwbaIzZloAvHe0fc6aCkJ6UQ=
     accessSecret:
       secure: AAABAOgGOPp2psPjjfgQHY7iQdsYdarlUFcI2qUSUSDhljnLHuXjuQc0qDG0mRbgVI0dXFkX0aTlRZ5+68zacA==
     amplitudeKey:

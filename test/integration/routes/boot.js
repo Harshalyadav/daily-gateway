@@ -527,4 +527,27 @@ describe('boot routes', () => {
         },
       });
   });
+
+  it('should return submit_article false if flag exists', async () => {
+    mockFeatureFlagForUser('submit_article', false);
+
+    const res = await request
+      .get('/boot')
+      .set('Cookie', [`da3=${accessToken.token}`])
+      .expect(200);
+
+    expect(res.body.flags.submit_article.enabled).to.equal(false);
+  });
+
+  it('should set submit_article to true if user has enough reputation', async () => {
+    mockFeatureFlagForUser('submit_article', false);
+    await userModel.updateReputation('1', 250);
+
+    const res = await request
+      .get('/boot')
+      .set('Cookie', [`da3=${accessToken.token}`])
+      .expect(200);
+
+    expect(res.body.flags.submit_article.enabled).to.equal(true);
+  });
 });

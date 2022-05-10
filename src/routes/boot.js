@@ -238,6 +238,16 @@ const getCompanionExpandedState = (settings, flags) => {
   return settings.companionExpanded;
 };
 
+const getSubmitArticleState = (flags, user) => {
+  if (!flags?.submit_article?.enabled) {
+    if (user?.reputation >= process.env.SUBMIT_ARTICLE_THRESHOLD) {
+      return { enabled: true, value: '' };
+    }
+  }
+
+  return flags?.submit_article;
+};
+
 router.get(
   '/companion',
   async (ctx) => {
@@ -306,6 +316,9 @@ router.get('/', async (ctx) => {
     getSettings(ctx),
   ]);
 
+  if (flags) {
+    flags.submit_article = getSubmitArticleState(flags, base.user);
+  }
   settings.companionExpanded = getCompanionExpandedState(settings, flags);
 
   ctx.status = 200;
