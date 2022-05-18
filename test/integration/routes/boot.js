@@ -258,6 +258,7 @@ describe('boot routes', () => {
           permalink: 'http://localhost:5002/john',
           referralLink: 'https://api.daily.dev/get?r=john',
           firstVisit: res.body.user.firstVisit,
+          isFirstVisit: res.body.user.isFirstVisit,
           username: 'john',
         },
         registrationLink: 'http://localhost:5002/register',
@@ -314,6 +315,7 @@ describe('boot routes', () => {
           permalink: 'http://localhost:5002/john',
           referralLink: 'https://api.daily.dev/get?r=john',
           firstVisit: res.body.user.firstVisit,
+          isFirstVisit: res.body.user.isFirstVisit,
           username: 'john',
         },
         registrationLink: 'http://localhost:5002/register',
@@ -344,6 +346,34 @@ describe('boot routes', () => {
       .get('/boot')
       .set('Cookie', ['da5=refresh2'])
       .expect(403);
+  });
+
+  it('should return isFirstVisit variable for first time user', async () => {
+    const res = await request
+      .get('/boot')
+      .set('Cookie', ['da2=999'])
+      .expect(200);
+
+    expect(res.body.user.isFirstVisit)
+      .to
+      .equal(true);
+  });
+
+  it('should not return isFirstVisit variable for returning user', async () => {
+    const date1 = new Date('2020-01-21T21:44:16Z');
+    const date2 = new Date('2020-01-21T21:45:16Z');
+    await visit.upsert('123', 'app', date2, date1, '1', '');
+
+    const res = await request
+      .get('/boot')
+      .set('Cookie', ['da2=123'])
+      .expect(200);
+
+    expect(res.body.user)
+      .to
+      .not
+      .have
+      .property('isFirstVisit');
   });
 
   it('should return first visit time and referral of anonymous user', async () => {
@@ -415,6 +445,7 @@ describe('boot routes', () => {
       .equal({
         user: {
           id: '123',
+          isFirstVisit: true,
           firstVisit: res.body.user.firstVisit,
           referrer: '1',
         },
@@ -457,6 +488,7 @@ describe('boot routes', () => {
       .equal({
         user: {
           id: '123',
+          isFirstVisit: true,
           firstVisit: res.body.user.firstVisit,
         },
         flags: null,
@@ -515,14 +547,13 @@ describe('boot routes', () => {
       .to
       .deep
       .equal({
-        alerts: {
-          filter: true,
-        },
+        alerts: ALERTS_DEFAULT,
         flags: null,
         postData: POST_DEFAULT.postByUrl,
         settings: SETTINGS_DEFAULT,
         user: {
           id: '123',
+          isFirstVisit: true,
           firstVisit: res.body.user.firstVisit,
         },
       });

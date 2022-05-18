@@ -91,6 +91,7 @@ const bootBaseResponse = async (
       return {
         ...baseResponse,
         user: {
+          isFirstVisit: true,
           firstVisit: now,
           referrer: referrer.id,
         },
@@ -100,6 +101,7 @@ const bootBaseResponse = async (
   return {
     ...baseResponse,
     user: {
+      isFirstVisit: true,
       firstVisit: now,
     },
   };

@@ -30,7 +30,12 @@ export function deleteKeysByPattern(pattern) {
   });
 }
 
-export const ALERTS_DEFAULT = { filter: true };
+export const ALERTS_DEFAULT = {
+  filter: true,
+  rankLastSeen: null,
+  myFeed: null,
+  companionHelper: true,
+};
 export const SETTINGS_DEFAULT = {
   theme: 'darcula',
   showTopSites: true,
@@ -40,6 +45,11 @@ export const SETTINGS_DEFAULT = {
   openNewTab: true,
   sidebarExpanded: true,
   companionExpanded: false,
+  autoDismissNotifications: true,
+  customLinks: null,
+  optOutCompanion: false,
+  optOutWeeklyGoal: false,
+  sortingEnabled: false,
 };
 export const getRedisObject = async (ctx, prefix, defaultValues, getFromApi) => {
   if (!ctx.state.user) {

@@ -66,6 +66,7 @@ describe('users routes', () => {
         visitId: res.body.visitId,
         sessionId: res.body.sessionId,
         firstVisit: res.body.firstVisit,
+        isFirstVisit: res.body.isFirstVisit,
       });
     });
 
@@ -97,6 +98,7 @@ describe('users routes', () => {
         visitId: res.body.visitId,
         sessionId: res.body.sessionId,
         firstVisit: res.body.firstVisit,
+        isFirstVisit: res.body.isFirstVisit,
       });
     });
 
@@ -144,6 +146,7 @@ describe('users routes', () => {
       expect(res.body).to.deep.equal({
         id: '123',
         firstVisit: res.body.firstVisit,
+        isFirstVisit: true,
         referrer: '1',
         visitId: res.body.visitId,
         sessionId: res.body.sessionId,
