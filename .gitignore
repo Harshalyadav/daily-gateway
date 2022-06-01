@@ -7,8 +7,7 @@ prod.sh
 cron.yaml
 
 # local env files
-.env.development
-.env.*.development
+.env.*
 
 debezium/conf/key.json
 debezium/data
