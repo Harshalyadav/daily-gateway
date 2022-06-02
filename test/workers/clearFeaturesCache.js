@@ -2,19 +2,7 @@ import { expect } from 'chai';
 import flagsmith from 'flagsmith-nodejs';
 import worker from '../../src/workers/clearFeaturesCache';
 import { expectSuccessfulBackground, mockChangeMessage, mockFeatureFlagForUser } from '../helpers';
-import redis, { deleteKeysByPattern } from '../../src/redis';
-
-const countByPattern = (pattern) => new Promise((resolve, reject) => {
-  const stream = redis.scanStream({ match: pattern });
-  let count = 0;
-  stream.on('data', (keys) => {
-    if (keys.length) {
-      count += keys.length;
-    }
-  });
-  stream.on('end', () => resolve(count));
-  stream.on('error', reject);
-});
+import { deleteKeysByPattern, countByPattern } from '../../src/redis';
 
 describe('clear features cache', () => {
   beforeEach(async () => {

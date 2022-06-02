@@ -1,7 +1,7 @@
 FROM binxio/gcp-get-secret
 
-FROM node:14.13-alpine
-RUN apk add g++ make python
+FROM node:16.15-alpine
+RUN apk add g++ make python3
 
 EXPOSE 3000
 

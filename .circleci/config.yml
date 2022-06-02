@@ -6,7 +6,7 @@ orbs:
 jobs:
   build:
     docker:
-      - image: circleci/node:14.13.0
+      - image: cimg/node:16.15
     steps:
       - checkout
       - restore_cache:
@@ -27,7 +27,7 @@ jobs:
             - build
   test:
     docker:
-      - image: circleci/node:14.13.0
+      - image: cimg/node:16.15
       - image: mysql:5.7
         environment:
           MYSQL_DATABASE: test
@@ -46,7 +46,7 @@ jobs:
             echo -n .
             sleep 1
             done
-            echo Failed waiting for Postgress && exit 1
+            echo Failed waiting for Mysql && exit 1
       - run:
           name: Test
           command: yarn test --reporter mocha-junit-reporter
@@ -82,7 +82,7 @@ jobs:
           registry-url: us.gcr.io
   pulumi_preview:
     docker:
-      - image: circleci/node:14.13.0
+      - image: cimg/node:16.15
     steps:
       - checkout
       - pulumi/login
@@ -96,7 +96,7 @@ jobs:
           working_directory: infra
   pulumi_up:
     docker:
-      - image: circleci/node:14.13.0
+      - image: cimg/node:16.15
     steps:
       - checkout
       - gcp-cli/install
