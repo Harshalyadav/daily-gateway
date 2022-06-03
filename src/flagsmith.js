@@ -16,7 +16,7 @@ flagsmith.init({
       return cacheValue && JSON.parse(cacheValue);
     },
     set: async (key, value) => {
-      await ioRedisPool.execute(async (client) => client.set(getKey(key), JSON.stringify(value), 'EX', 60 * 60));
+      await ioRedisPool.execute(async (client) => client.set(getKey(key), JSON.stringify(value), 'EX', 60 * 60 * 24 * 30));
     },
   },
 });
