@@ -23,19 +23,16 @@ export const SECONDS_IN_A_MONTH = 2628288;
 
 export const isRedisEmptyValue = (value) => value === undefined || value === null || value === '';
 
-export const setRedisWithOneMonthExpiry = async (key, value) => ioRedisPool.execute(async (client) => client.set(key, value, 'EX', SECONDS_IN_A_MONTH));
+export const setRedisWithOneMonthExpiry = (key, value) => ioRedisPool.execute((client) => client.set(key, value, 'EX', SECONDS_IN_A_MONTH));
 
 export const setRedisObject = (key, obj) => setRedisWithOneMonthExpiry(key, JSON.stringify(obj));
 
 export function deleteKeysByPattern(pattern) {
-  return new Promise((resolve, reject) => ioRedisPool.execute(async (client) => {
+  return ioRedisPool.execute((client) => new Promise((resolve, reject) => {
     const stream = client.scanStream({ match: pattern });
     stream.on('data', (keys) => {
       if (keys.length) {
         client.unlink(keys);
-      } else {
-        stream.destroy();
-        resolve();
       }
     });
     stream.on('end', resolve);
@@ -44,16 +41,11 @@ export function deleteKeysByPattern(pattern) {
 }
 
 export function countByPattern(pattern) {
-  return new Promise((resolve, reject) => ioRedisPool.execute(async (client) => {
+  return ioRedisPool.execute((client) => new Promise((resolve, reject) => {
     const stream = client.scanStream({ match: pattern });
     let count = 0;
     stream.on('data', (keys) => {
-      if (keys.length) {
-        count += keys.length;
-      } else {
-        stream.destroy();
-        resolve();
-      }
+      count += keys.length;
     });
     stream.on('end', () => resolve(count));
     stream.on('error', reject);
@@ -88,7 +80,7 @@ export const getRedisObject = async (ctx, prefix, defaultValues, getFromApi) => 
 
   const { userId } = ctx.state.user;
   const key = getUserRedisObjectKey(prefix, userId);
-  const cache = await ioRedisPool.execute(async (client) => client.get(key));
+  const cache = await ioRedisPool.execute((client) => client.get(key));
 
   if (isRedisEmptyValue(cache)) {
     try {
