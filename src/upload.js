@@ -9,7 +9,7 @@ import Busboy from 'busboy';
  */
 export default function parse(req, opts) {
   return new Promise((resolve, reject) => {
-    const busboy = new Busboy({
+    const busboy = Busboy({
       headers: req.headers,
       ...opts,
     });
