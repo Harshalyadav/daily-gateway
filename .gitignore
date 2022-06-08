@@ -5,6 +5,7 @@ app.yaml
 local.sh
 prod.sh
 cron.yaml
+yarn-error.log
 
 # local env files
 .env.*
