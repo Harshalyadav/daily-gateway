@@ -168,7 +168,7 @@ createAutoscaledApplication({
       },
     },
   ],
-  minReplicas: 1,
+  minReplicas: 2,
   maxReplicas: 10,
   metrics: [
     {
