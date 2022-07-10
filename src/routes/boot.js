@@ -231,15 +231,13 @@ const getFeaturesForUser = async (ctx) => {
     }
   }
   return {
-    flags: {
-      feed_version: {
-        enabled: true,
-        value: 7,
-      },
-      my_feed_on: {
-        enabled: true,
-        value: '',
-      },
+    feed_version: {
+      enabled: true,
+      value: 7,
+    },
+    my_feed_on: {
+      enabled: true,
+      value: '',
     },
   };
 };
