@@ -21,7 +21,7 @@ Now, this service is focused on user management. Registration, login, logout, re
 
 ## Stack
 
-* Node v14.13.1 (a `.nvmrc` is presented for [nvm](https://github.com/nvm-sh/nvm) users).
+* Node v16.15.0 (a `.nvmrc` is presented for [nvm](https://github.com/nvm-sh/nvm) users).
 * Yarn for managing dependencies.
 * Koa as the web framework
 * MySQL and knex as a database layer
@@ -37,7 +37,7 @@ Now, this service is focused on user management. Registration, login, logout, re
   * `models` - Database layer functions split by entity type.
   * `routes` - Koa endpoints.
   * `scripts` - Utility scripts for administration tasks.
-  * `workers` - Pub/Sub message handlers. 
+  * `workers` - Pub/Sub message handlers.
 
 ## Local environment
 

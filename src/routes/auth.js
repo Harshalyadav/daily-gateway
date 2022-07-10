@@ -29,7 +29,8 @@ const generateRefreshToken = async (ctx, userId) => {
   const refreshToken = refreshTokenModel.generate();
   await refreshTokenModel.add(userId, refreshToken);
   ctx.cookies.set(
-    config.cookies.refreshToken.key, refreshToken,
+    config.cookies.refreshToken.key,
+    refreshToken,
     addSubdomainOpts(ctx, config.cookies.refreshToken.opts),
   );
 };
@@ -77,7 +78,10 @@ const authenticateToken = async (ctx, redirectUri, providerName, providerCode) =
     const hasEmail = profile.email && profile.email.indexOf('users.noreply.github.com') < 0;
     [user] = await Promise.all([
       userModel.add(
-        userId, profile.name, hasEmail ? profile.email : undefined, profile.image || fallbackAvatar,
+        userId,
+        profile.name,
+        hasEmail ? profile.email : undefined,
+        profile.image || fallbackAvatar,
         ctx.cookies.get(config.cookies.referral.key, config.cookies.referral.opts),
       ),
       provider.add(userId, providerName, profile.id),

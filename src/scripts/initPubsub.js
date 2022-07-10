@@ -3,6 +3,7 @@
 import '../config';
 import { PubSub } from '@google-cloud/pubsub';
 import { Status } from '@grpc/grpc-js/build/src/constants';
+// eslint-disable-next-line import/no-relative-packages
 import workers from '../../infra/workers';
 
 if (process.env.GCLOUD_PROJECT) {

@@ -5,7 +5,8 @@ import generateId from './generateId';
 export const setTrackingId = (ctx, id) => {
   ctx.trackingId = id;
   ctx.cookies.set(
-    config.cookies.tracking.key, id,
+    config.cookies.tracking.key,
+    id,
     addSubdomainOpts(ctx, config.cookies.tracking.opts),
   );
 };
@@ -21,7 +22,8 @@ export const getTrackingId = (ctx) => {
 export const setSessionId = (ctx, id) => {
   ctx.sessionId = id;
   ctx.cookies.set(
-    config.cookies.session.key, id,
+    config.cookies.session.key,
+    id,
     addSubdomainOpts(ctx, config.cookies.session.opts),
   );
 };

@@ -161,6 +161,7 @@ describe('users routes', () => {
         .expect(200);
 
       // Sleep as adding a new visit happens in the background
+      // eslint-disable-next-line no-promise-executor-return
       await new Promise((resolve) => setTimeout(resolve, 50));
       const visitObj = await visit.get('123', 'extension');
       expect(visitObj.referral, '1');
@@ -174,6 +175,7 @@ describe('users routes', () => {
         .expect(200);
 
       // Sleep as adding a new visit happens in the background
+      // eslint-disable-next-line no-promise-executor-return
       await new Promise((resolve) => setTimeout(resolve, 50));
       const visitObj = await visit.get('123', 'extension');
       expect(visitObj.referral, null);

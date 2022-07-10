@@ -20,8 +20,10 @@ const onUserChange = async (log, data) => {
       if (data.payload.op === 'c') {
         await publishEvent(userRegisteredTopic, after);
       } else if (data.payload.op === 'u' && data.payload.before.reputation === data.payload.after.reputation) {
-        await publishEvent(userUpdatedTopic,
-          { user: data.payload.before, newProfile: after });
+        await publishEvent(
+          userUpdatedTopic,
+          { user: data.payload.before, newProfile: after },
+        );
         if (data.payload.before.username !== data.payload.after.username) {
           await publishEvent(usernameChangedTopic, {
             userId: data.payload.after.id,

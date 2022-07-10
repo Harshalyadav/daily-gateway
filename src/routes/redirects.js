@@ -12,7 +12,8 @@ const setReferral = (ctx) => {
   if (referral) {
     ctx.log.info({ referral }, 'redirecting by referral');
     ctx.cookies.set(
-      config.cookies.referral.key, referral,
+      config.cookies.referral.key,
+      referral,
       addSubdomainOpts(ctx, config.cookies.referral.opts),
     );
   }

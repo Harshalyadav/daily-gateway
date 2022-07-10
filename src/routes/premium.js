@@ -61,7 +61,7 @@ router.get(
         },
         body,
       });
-      const [, enc] = res.match(new RegExp('<encrypted-token>(.*)</encrypted-token>'));
+      const [, enc] = res.match(/<encrypted-token>(.*)<\/encrypted-token>/);
       ctx.status = 307;
       ctx.redirect(`${config.bluesnap.checkoutUrl}/buynow/checkout?storeId=${config.bluesnap.storeId}&enc=${enc}`);
     } else {

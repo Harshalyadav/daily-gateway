@@ -67,7 +67,8 @@ describe('cdc', () => {
         table: 'users',
       }),
     );
-    expect(publishEventStub.calledWith(userUpdatedTopic,
+    expect(publishEventStub.calledWith(
+      userUpdatedTopic,
       {
         user: toCamelCase({
           ...user,
@@ -75,7 +76,8 @@ describe('cdc', () => {
           updated_at: user.updated_at.toISOString(),
         }),
         newProfile: toCamelCase(after),
-      })).to.be.ok;
+      },
+    )).to.be.ok;
   });
 
   it('should not notify on user update when reputation changes', async () => {

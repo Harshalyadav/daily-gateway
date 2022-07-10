@@ -16,10 +16,13 @@ export const addSubdomainOpts = (ctx, opts) => {
 };
 
 export const setAuthCookie = async (ctx, user, roles = []) => {
-  const accessToken = await signJwt({ userId: user.id, premium: user.premium, roles },
-    15 * 60 * 1000);
+  const accessToken = await signJwt(
+    { userId: user.id, premium: user.premium, roles },
+    15 * 60 * 1000,
+  );
   ctx.cookies.set(
-    config.cookies.auth.key, accessToken.token,
+    config.cookies.auth.key,
+    accessToken.token,
     addSubdomainOpts(ctx, config.cookies.auth.opts),
   );
   return accessToken;
