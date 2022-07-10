@@ -15,7 +15,11 @@ const flagsmith = new Flagsmith({
     },
     get: async (key) => {
       const cacheValue = await ioRedisPool.execute((client) => client.get(getKey(key)));
-      return cacheValue && JSON.parse(cacheValue);
+      const parsed = cacheValue && JSON.parse(cacheValue);
+      if (parsed && !parsed.flags) {
+        return { flags: parsed };
+      }
+      return parsed;
     },
     set: async (key, value) => {
       await ioRedisPool.execute((client) => client.set(getKey(key), JSON.stringify(value), 'EX', 60 * 60 * 24 * 30));
