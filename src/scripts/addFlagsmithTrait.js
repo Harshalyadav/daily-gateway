@@ -10,7 +10,7 @@ const run = async (filename) => {
     const userId = userIds[i].trim();
     console.log(`${i}/${userIds.length}`);
     // eslint-disable-next-line no-await-in-loop
-    await flagsmith.setTrait(userId, 'companion_beta', 'true');
+    await flagsmith.getIdentityFlags(userId, { companion_beta: 'true' });
   }
 };
 

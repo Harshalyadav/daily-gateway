@@ -2,7 +2,7 @@
 
 import flagsmith from '../flagsmith';
 
-const run = async (userId) => flagsmith.getFlagsForUser(userId);
+const run = async (userId) => flagsmith.getIdentityFlags(userId);
 
 run(process.argv[process.argv.length - 1])
   .then(console.log)

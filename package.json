@@ -55,7 +55,7 @@
     "cloudinary": "^1.26.2",
     "cross-env": "^7.0.3",
     "dotenv": "^16.0.1",
-    "flagsmith-nodejs": "^1.1.0",
+    "flagsmith-nodejs": "2.0.2",
     "jsonwebtoken": "^8.3.0",
     "knex": "^2.1.0",
     "koa": "^2.13.1",

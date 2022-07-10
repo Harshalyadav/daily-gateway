@@ -180,7 +180,8 @@ export const bootSharedLogic = async (ctx, shouldRefreshToken) => {
     };
   }
 
-  updateUserVisit(ctx, now, referral, trackingId).catch((err) => ctx.log.error({ err }, `failed to update visit for ${trackingId}`));
+  updateUserVisit(ctx, now, referral, trackingId)
+    .catch((err) => ctx.log.error({ err }, `failed to update visit for ${trackingId}`));
 
   return returnObject;
 };
@@ -223,7 +224,8 @@ const getFeaturesForUser = async (ctx) => {
   const trackingId = getTrackingId(ctx);
   if (trackingId) {
     try {
-      return await flagsmith.getFlagsForUser(trackingId);
+      const { flags } = await flagsmith.getIdentityFlags(trackingId);
+      return flags;
     } catch (err) {
       ctx.log.error({ err }, 'failed to fetch feature flags');
     }
@@ -243,7 +245,10 @@ const getCompanionExpandedState = (settings, flags) => {
 const getSubmitArticleState = (flags, user) => {
   if (!flags?.submit_article?.enabled) {
     if (user?.reputation >= process.env.SUBMIT_ARTICLE_THRESHOLD) {
-      return { enabled: true, value: '' };
+      return {
+        enabled: true,
+        value: '',
+      };
     }
   }
 

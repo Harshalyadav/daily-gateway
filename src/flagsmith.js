@@ -1,11 +1,13 @@
-import flagsmith from 'flagsmith-nodejs';
+import Flagsmith from 'flagsmith-nodejs';
 import { ioRedisPool } from './redis';
 import config from './config';
 
 const getKey = (key) => `features:${key}`;
 
-flagsmith.init({
-  environmentID: config.flagsmithKey,
+const flagsmith = new Flagsmith({
+  apiUrl: 'https://api.flagsmith.com/api/v1/',
+  requestTimeoutSeconds: 0.5,
+  environmentKey: config.flagsmithKey,
   cache: {
     has: async (key) => {
       const reply = await ioRedisPool.execute((client) => client.exists(getKey(key)));

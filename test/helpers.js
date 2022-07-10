@@ -1,7 +1,10 @@
-import nock from 'nock';
+// import nock from 'nock';
+import sinon from 'sinon';
+import flagsmith from '../src/flagsmith';
 
 function base64(i) {
-  return Buffer.from(i, 'utf8').toString('base64');
+  return Buffer.from(i, 'utf8')
+    .toString('base64');
 }
 
 export const mockMessage = (
@@ -60,15 +63,33 @@ export const mockFeatureFlagForUser = (
   featureName,
   enabled,
   value,
-) => nock('https://api.flagsmith.com')
-  .filteringPath(/identifier=[^&]*/g, 'identifier=XXX')
-  .get('/api/v1/identities/?identifier=XXX')
-  .reply(200, {
-    flags: [
-      {
-        feature: { name: featureName },
-        enabled,
-        feature_state_value: value,
+) => {
+  const stub = sinon.stub(flagsmith, 'getIdentityFlags');
+  if (!featureName) {
+    stub.callsFake(() => ({
+      flags: null,
+    }));
+  } else {
+    stub.callsFake(() => ({
+      flags: {
+        [featureName]: {
+          enabled,
+          value,
+        },
       },
-    ],
-  });
+    }));
+  }
+  return stub;
+};
+
+// ) => nock('https://api.flagsmith.com')
+//   .post('/api/v1/identities/')
+//   .reply(200, {
+//     flags: [
+//       {
+//         feature: { name: featureName },
+//         enabled,
+//         feature_state_value: value,
+//       },
+//     ],
+//   });

@@ -2,6 +2,7 @@ import knexCleaner from 'knex-cleaner';
 import supertest from 'supertest';
 import nock from 'nock';
 import { expect } from 'chai';
+import sinon from 'sinon';
 import db, { migrate } from '../../../src/db';
 import {
   deleteKeysByPattern,
@@ -86,6 +87,10 @@ describe('boot routes', () => {
     server = app.listen();
     request = supertest(server);
     accessToken = await sign({ userId: '1' }, null);
+  });
+
+  afterEach(() => {
+    sinon.restore();
   });
 
   after(() => {
@@ -461,8 +466,7 @@ describe('boot routes', () => {
 
   it('should return valid response when flagsmith returns error', async () => {
     nock('https://api.flagsmith.com')
-      .filteringPath(/identifier=[^&]*/g, 'identifier=XXX')
-      .get('/api/v1/identities/?identifier=XXX')
+      .post('/api/v1/identities/')
       .reply(500);
 
     const res = await request
