@@ -230,7 +230,18 @@ const getFeaturesForUser = async (ctx) => {
       ctx.log.error({ err }, 'failed to fetch feature flags');
     }
   }
-  return null;
+  return {
+    flags: {
+      feed_version: {
+        enabled: true,
+        value: 7,
+      },
+      my_feed_on: {
+        enabled: true,
+        value: '',
+      },
+    },
+  };
 };
 
 const getCompanionExpandedState = (settings, flags) => {

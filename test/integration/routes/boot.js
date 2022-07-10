@@ -486,6 +486,7 @@ describe('boot routes', () => {
       .be
       .a('string');
     delete res.body.visit;
+    delete res.body.flags;
     expect(res.body)
       .to
       .deep
@@ -495,7 +496,6 @@ describe('boot routes', () => {
           isFirstVisit: true,
           firstVisit: res.body.user.firstVisit,
         },
-        flags: null,
         alerts: ALERTS_DEFAULT,
         settings: SETTINGS_DEFAULT,
       });
