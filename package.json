@@ -69,6 +69,7 @@
     "lodash": "^4.17.21",
     "mysql": "^2.15.0",
     "nanoid": "^3.3.4",
+    "p-timeout": "4.1.0",
     "pino": "^8.1.0",
     "request": "^2.85.0",
     "request-promise-native": "^1.0.9"

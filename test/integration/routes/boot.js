@@ -22,6 +22,7 @@ import provider from '../../../src/models/provider';
 import refreshTokenModel from '../../../src/models/refreshToken';
 import visit from '../../../src/models/visit';
 import config from '../../../src/config';
+import { DEFAULT_FLAGS } from '../../../src/routes/boot';
 
 const POST_DEFAULT = {
   postByUrl: {
@@ -554,7 +555,7 @@ describe('boot routes', () => {
       .deep
       .equal({
         alerts: ALERTS_DEFAULT,
-        flags: null,
+        flags: DEFAULT_FLAGS,
         postData: POST_DEFAULT.postByUrl,
         settings: SETTINGS_DEFAULT,
         user: {

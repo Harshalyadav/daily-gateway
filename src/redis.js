@@ -75,7 +75,7 @@ export const SETTINGS_DEFAULT = {
 };
 export const getRedisObject = async (ctx, prefix, defaultValues, getFromApi) => {
   if (!ctx.state.user) {
-    return defaultValues;
+    return { ...defaultValues };
   }
 
   const { userId } = ctx.state.user;

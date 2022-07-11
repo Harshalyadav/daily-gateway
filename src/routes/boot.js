@@ -1,4 +1,5 @@
 import Router from 'koa-router';
+import pTimeout from 'p-timeout';
 import { validateRefreshToken } from '../auth';
 import generateId from '../generateId';
 import visit from '../models/visit';
@@ -220,11 +221,23 @@ const getSettings = async (ctx) => {
   return settings;
 };
 
+const FLAGSMITH_TIMEOUT = 500;
+export const DEFAULT_FLAGS = {
+  feed_version: {
+    enabled: true,
+    value: 7,
+  },
+  my_feed_on: {
+    enabled: true,
+    value: '',
+  },
+};
+
 const getFeaturesForUser = async (ctx) => {
   const trackingId = getTrackingId(ctx);
   if (trackingId) {
     try {
-      const { flags } = await flagsmith.getIdentityFlags(trackingId);
+      const { flags } = await pTimeout(flagsmith.getIdentityFlags(trackingId), FLAGSMITH_TIMEOUT);
       // Extract only enabled and value
       return Object.keys(flags)
         .reduce((acc, key) => ({
@@ -238,16 +251,7 @@ const getFeaturesForUser = async (ctx) => {
       ctx.log.error({ err }, 'failed to fetch feature flags');
     }
   }
-  return {
-    feed_version: {
-      enabled: true,
-      value: 7,
-    },
-    my_feed_on: {
-      enabled: true,
-      value: '',
-    },
-  };
+  return { ...DEFAULT_FLAGS };
 };
 
 const getCompanionExpandedState = (settings, flags) => {
