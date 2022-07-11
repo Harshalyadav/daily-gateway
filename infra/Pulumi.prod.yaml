@@ -8,8 +8,6 @@ config:
       secure: AAABAEwxMDWanfaCtFU+qxqTwbaIzZloAvHe0fc6aCkJ6UQ=
     accessSecret:
       secure: AAABAOgGOPp2psPjjfgQHY7iQdsYdarlUFcI2qUSUSDhljnLHuXjuQc0qDG0mRbgVI0dXFkX0aTlRZ5+68zacA==
-    amplitudeKey:
-      secure: AAABAHjka2+Ii8cxUjvBlXSOI/g7wR4kKQc/BFYJi/LBEOba5fw6yvDRhW9xOCXveCgBtnr5Uy7avr/k6ykTJQ==
     analyticsUrl:
       secure: AAABAJkGVEQzj8UJ2fymkRIMrcjMtnzCOti2PdSniVYSP7beZHDnxPmpr+08UHw1m4xZtQ==
     apiSecret:

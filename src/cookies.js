@@ -27,8 +27,3 @@ export const setAuthCookie = async (ctx, user, roles = []) => {
   );
   return accessToken;
 };
-
-export const getAmplitudeCookie = (ctx) => {
-  const cookieName = `amp_${config.amplitudeKey.slice(0, 6)}_${extractDomain(ctx)}`;
-  return ctx.cookies.get(cookieName);
-};

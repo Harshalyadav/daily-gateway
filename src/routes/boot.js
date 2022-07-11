@@ -10,7 +10,7 @@ import provider from '../models/provider';
 import role from '../models/role';
 import { setSessionId, setTrackingId } from '../tracking';
 import { ForbiddenError } from '../errors';
-import { getAmplitudeCookie, setAuthCookie } from '../cookies';
+import { setAuthCookie } from '../cookies';
 import {
   getAlertsFromAPI,
   getSettingsFromAPI,
@@ -65,7 +65,6 @@ const bootBaseResponse = async (
   const visitObject = visitPromise ? await visitPromise : null;
   const baseResponse = {
     visit: {
-      ampStorage: getAmplitudeCookie(ctx),
       visitId,
       sessionId: ctx.sessionId,
     },
