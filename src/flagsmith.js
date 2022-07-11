@@ -5,7 +5,7 @@ import config from './config';
 const getKey = (key) => `features:${key}`;
 
 const flagsmith = new Flagsmith({
-  apiUrl: 'https://api.flagsmith.com/api/v1/',
+  apiUrl: 'https://edge.api.flagsmith.com/api/v1/',
   environmentKey: config.flagsmithKey,
   cache: {
     has: async (key) => {
