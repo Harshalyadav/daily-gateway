@@ -6,7 +6,6 @@ const getKey = (key) => `features:${key}`;
 
 const flagsmith = new Flagsmith({
   apiUrl: 'https://api.flagsmith.com/api/v1/',
-  // requestTimeoutSeconds: 0.5,
   environmentKey: config.flagsmithKey,
   cache: {
     has: async (key) => {

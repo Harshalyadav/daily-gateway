@@ -225,7 +225,15 @@ const getFeaturesForUser = async (ctx) => {
   if (trackingId) {
     try {
       const { flags } = await flagsmith.getIdentityFlags(trackingId);
-      return flags;
+      // Extract only enabled and value
+      return Object.keys(flags)
+        .reduce((acc, key) => ({
+          ...acc,
+          [key]: {
+            enabled: flags[key].enabled,
+            value: flags[key].value,
+          },
+        }), {});
     } catch (err) {
       ctx.log.error({ err }, 'failed to fetch feature flags');
     }
