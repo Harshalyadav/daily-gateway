@@ -140,6 +140,13 @@ createAutoscaledExposedApplication({
         requests: limits,
         limits,
       },
+      lifecycle: {
+        preStop: {
+          exec: {
+            command: ["/bin/bash", "-c", "sleep 10"],
+          }
+        }
+      }
     },
   ],
   maxReplicas: 10,
