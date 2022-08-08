@@ -138,7 +138,7 @@ export const bootSharedLogic = async (ctx, shouldRefreshToken) => {
     }
 
     const accessToken = shouldRefreshToken
-      ? await setAuthCookie(ctx, user, roles)
+      ? await setAuthCookie(ctx, user.id, roles)
       : undefined;
 
     const base = await bootBaseResponse(
