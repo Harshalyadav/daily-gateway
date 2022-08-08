@@ -33,3 +33,5 @@ export const getFromDailyGraphQLApi = (ctx, query) => getFromDailyApi(ctx, 'POST
 export const getSettingsFromAPI = (ctx) => getFromDailyApi(ctx, 'GET', '/settings');
 
 export const getAlertsFromAPI = (ctx) => getFromDailyApi(ctx, 'GET', '/alerts');
+
+export const getUserFromAPI = (ctx) => getFromDailyApi(ctx, 'GET', '/whoami');

@@ -43,6 +43,18 @@ const POST_DEFAULT = {
   },
 };
 
+const mockKratos = (expected) => {
+  nock(config.kratosOrigin)
+    .get('/sessions/whoami')
+    .reply(200, JSON.stringify(expected));
+};
+
+const mockUserApi = (expected) => {
+  nock(config.apiUrl)
+    .get('/whoami')
+    .reply(200, JSON.stringify(expected));
+};
+
 const mockAlertsApi = (
   expected = { filter: true },
 ) => {
@@ -224,6 +236,72 @@ describe('boot routes', () => {
       .equal(expected);
   });
 
+  it('should return registered user profile for kratos user', async () => {
+    mockFeatureFlagForUser('feat_limit_dev_card', false);
+    const expected = {
+      id: '1',
+      bio: null,
+      github: null,
+      hashnode: null,
+      name: 'Ido',
+      image: 'https://daily.dev/ido.jpg',
+      createdAt: new Date(),
+      twitter: null,
+      username: 'idoshamun',
+      infoConfirmed: true,
+    };
+
+    mockUserApi(expected);
+    mockKratos({ identity: { id: 1 } });
+
+    const res = await request
+      .get('/boot')
+      .set('Cookie', [`da3=${accessToken.token}`, 'ory_kratos_session=test123'])
+      .expect(200);
+
+    expect(res.body.user.createdAt)
+      .to
+      .be
+      .a('string');
+    expect(res.body.visit.visitId)
+      .to
+      .be
+      .a('string');
+    expect(res.body.visit.sessionId)
+      .to
+      .be
+      .a('string');
+    delete res.body.visit;
+    delete res.body.user.createdAt;
+    delete res.body.accessToken;
+
+    const {
+      createdAt,
+      ...userExpected
+    } = expected;
+
+    expect(res.body)
+      .to
+      .deep
+      .equal({
+        user: {
+          ...userExpected,
+          firstVisit: res.body.user.firstVisit,
+          isFirstVisit: res.body.user.isFirstVisit,
+          permalink: 'http://127.0.0.1:5002/idoshamun',
+          providers: [null],
+          roles: [],
+        },
+        flags: {
+          feat_limit_dev_card: {
+            enabled: false,
+          },
+        },
+        alerts: ALERTS_DEFAULT,
+        settings: SETTINGS_DEFAULT,
+      });
+  });
+
   it('should return registered user profile', async () => {
     mockFeatureFlagForUser('feat_limit_dev_card', false);
 
@@ -261,13 +339,13 @@ describe('boot routes', () => {
           acceptedMarketing: true,
           roles: [],
           reputation: 10,
-          permalink: 'http://localhost:5002/john',
+          permalink: 'http://127.0.0.1:5002/john',
           referralLink: 'https://api.daily.dev/get?r=john',
           firstVisit: res.body.user.firstVisit,
           isFirstVisit: res.body.user.isFirstVisit,
           username: 'john',
         },
-        registrationLink: 'http://localhost:5002/register',
+        registrationLink: 'http://127.0.0.1:5002/register',
         flags: {
           feat_limit_dev_card: {
             enabled: false,
@@ -318,13 +396,13 @@ describe('boot routes', () => {
           acceptedMarketing: true,
           roles: ['admin', 'moderator'],
           reputation: 10,
-          permalink: 'http://localhost:5002/john',
+          permalink: 'http://127.0.0.1:5002/john',
           referralLink: 'https://api.daily.dev/get?r=john',
           firstVisit: res.body.user.firstVisit,
           isFirstVisit: res.body.user.isFirstVisit,
           username: 'john',
         },
-        registrationLink: 'http://localhost:5002/register',
+        registrationLink: 'http://127.0.0.1:5002/register',
         flags: {
           feat_limit_dev_card: {
             enabled: false,
@@ -574,7 +652,9 @@ describe('boot routes', () => {
       .set('Cookie', [`da3=${accessToken.token}`])
       .expect(200);
 
-    expect(res.body.flags.submit_article.enabled).to.equal(false);
+    expect(res.body.flags.submit_article.enabled)
+      .to
+      .equal(false);
   });
 
   it('should set submit_article to true if user has enough reputation', async () => {
@@ -586,6 +666,8 @@ describe('boot routes', () => {
       .set('Cookie', [`da3=${accessToken.token}`])
       .expect(200);
 
-    expect(res.body.flags.submit_article.enabled).to.equal(true);
+    expect(res.body.flags.submit_article.enabled)
+      .to
+      .equal(true);
   });
 });

@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import rp from 'request-promise-native';
 import config from './config';
 import refreshTokenModel from './models/refreshToken';
 import { ForbiddenError } from './errors';
@@ -12,7 +13,7 @@ const sha256 = (buffer) => crypto.createHash('sha256').update(buffer).digest();
 
 export const generateChallenge = (verifier) => base64URLEncode(sha256(verifier));
 
-export const validateRefreshToken = async (ctx) => {
+const validateRefreshToken = async (ctx) => {
   const refreshToken = ctx.cookies.get(config.cookies.refreshToken.key);
   let shouldRefreshToken = false;
   if (refreshToken) {
@@ -25,4 +26,32 @@ export const validateRefreshToken = async (ctx) => {
     }
   }
   return shouldRefreshToken;
+};
+
+const validateKratosToken = async (ctx) => {
+  try {
+    const res = await rp(`${config.kratosOrigin}/sessions/whoami`, { headers: ctx.req.headers });
+    const kratos = JSON.parse(res);
+    if (kratos?.identity?.id) {
+      ctx.state.user = { userId: kratos.identity.id, isKratos: true };
+      return true;
+    }
+  } catch (e) {
+    if (e.statusCode === 401) {
+      return false;
+    }
+
+    throw e;
+  }
+
+  return false;
+};
+
+export const validateToken = async (ctx) => {
+  const isKratos = ctx.cookies.get(config.cookies.kratos.key);
+  if (isKratos) {
+    return validateKratosToken(ctx);
+  }
+
+  return validateRefreshToken(ctx);
 };

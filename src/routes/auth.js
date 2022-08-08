@@ -123,7 +123,7 @@ const callback = async (ctx, providerName, payloadFunc) => {
   if (state.skip_authenticate) {
     const user = await authenticateToken(ctx, primaryRedirectUri, state.provider, query.code);
     await generateRefreshToken(ctx, user.id);
-    await setAuthCookie(ctx, user);
+    await setAuthCookie(ctx, user.id);
     ctx.log.info(`connected ${user.id} with ${user.providers[0]}`);
     if (user.infoConfirmed) {
       ctx.redirect(state.redirect_uri);
@@ -205,7 +205,7 @@ router.post(
   }),
   async (ctx) => {
     const user = await authenticate(ctx, () => primaryRedirectUri);
-    await setAuthCookie(ctx, user);
+    await setAuthCookie(ctx, user.id);
 
     ctx.log.info(`connected ${user.id} with ${user.providers[0]}`);
     ctx.status = 200;

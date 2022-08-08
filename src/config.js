@@ -89,6 +89,9 @@ const config = {
       },
       key: 'da5',
     },
+    kratos: {
+      key: 'ory_kratos_session',
+    },
   },
   cors: {
     origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN : '*',
@@ -129,7 +132,8 @@ const config = {
   scraperSecret: process.env.SCRAPER_SECRET,
   accessSecret: process.env.ACCESS_SECRET || 'topsecret',
   primaryAuthOrigin: process.env.PRIMARY_AUTH_ORIGIN,
-  webappOrigin: process.env.WEBAPP_ORIGIN || 'http://localhost:5002',
+  kratosOrigin: process.env.KRATOS_ORIGIN || 'http://127.0.0.1:4433',
+  webappOrigin: process.env.WEBAPP_ORIGIN || 'http://127.0.0.1:5002',
   refreshToken: {
     secret: process.env.REFRESH_TOKEN_SECRET || 'topsecret',
     salt: process.env.REFRESH_TOKEN_SALT || 'salt',

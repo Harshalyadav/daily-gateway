@@ -3,6 +3,8 @@ import { sign as signJwt } from './jwt';
 
 const extractDomain = (ctx) => {
   const host = ctx.request.hostname;
+  // Localhost fix for local testing
+  if (host === '127.0.0.1') return host;
   const parts = host.split('.');
   while (parts.length > 2) {
     parts.shift();
@@ -15,9 +17,9 @@ export const addSubdomainOpts = (ctx, opts) => {
   return { ...opts, domain };
 };
 
-export const setAuthCookie = async (ctx, user, roles = []) => {
+export const setAuthCookie = async (ctx, userId, roles = []) => {
   const accessToken = await signJwt(
-    { userId: user.id, premium: user.premium, roles },
+    { userId, roles },
     15 * 60 * 1000,
   );
   ctx.cookies.set(

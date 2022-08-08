@@ -1,6 +1,6 @@
 import Router from 'koa-router';
 import pTimeout from 'p-timeout';
-import { validateRefreshToken } from '../auth';
+import { validateToken } from '../auth';
 import generateId from '../generateId';
 import visit from '../models/visit';
 import flagsmith from '../flagsmith';
@@ -14,7 +14,7 @@ import { setAuthCookie } from '../cookies';
 import {
   getAlertsFromAPI,
   getSettingsFromAPI,
-  getFromDailyGraphQLApi,
+  getFromDailyGraphQLApi, getUserFromAPI,
 } from '../integration';
 import { excludeProperties } from '../common';
 import {
@@ -122,13 +122,16 @@ export const bootSharedLogic = async (ctx, shouldRefreshToken) => {
   );
   let returnObject;
   if (ctx.state.user) {
-    const { userId } = ctx.state.user;
+    /**
+     * As we still need to support legacy users we temporary add a context for isKratos users
+     * This way we can determine who should query which database
+     */
+    const { userId, isKratos } = ctx.state.user;
+    const userRequests = isKratos
+      ? [getUserFromAPI(ctx), [], []]
+      : [userModel.getById(userId), provider.getByUserId(userId), role.getByUserId(userId)];
+    const [user, userProvider, roles] = await Promise.all(userRequests);
 
-    const [user, userProvider, roles] = await Promise.all([
-      userModel.getById(userId),
-      provider.getByUserId(userId),
-      role.getByUserId(userId),
-    ]);
     if (!user) {
       setTrackingId(ctx, null);
       throw new ForbiddenError();
@@ -278,7 +281,7 @@ const getSubmitArticleState = (flags, user) => {
 router.get(
   '/companion',
   async (ctx) => {
-    const shouldRefreshToken = await validateRefreshToken(ctx);
+    const shouldRefreshToken = await validateToken(ctx);
     const [data, base, flags, settings, alerts] = await Promise.all([
       getFromDailyGraphQLApi(ctx, {
         query: `query Post($url: String) {
@@ -335,7 +338,7 @@ router.get(
 );
 
 router.get('/', async (ctx) => {
-  const shouldRefreshToken = await validateRefreshToken(ctx);
+  const shouldRefreshToken = await validateToken(ctx);
   const [flags, base, alerts, settings] = await Promise.all([
     getFeaturesForUser(ctx),
     bootSharedLogic(ctx, shouldRefreshToken),
