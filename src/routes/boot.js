@@ -223,7 +223,7 @@ const getSettings = async (ctx) => {
   return settings;
 };
 
-const FLAGSMITH_TIMEOUT = 500;
+const FLAGSMITH_TIMEOUT = 1000;
 export const DEFAULT_FLAGS = {
   feed_version: {
     enabled: true,
