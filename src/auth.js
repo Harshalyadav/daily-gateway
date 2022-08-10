@@ -3,6 +3,7 @@ import rp from 'request-promise-native';
 import config from './config';
 import refreshTokenModel from './models/refreshToken';
 import { ForbiddenError } from './errors';
+import logger from './logger';
 
 const base64URLEncode = (str) => str.toString('base64')
   .replace(/\+/g, '-')
@@ -30,8 +31,15 @@ const validateRefreshToken = async (ctx) => {
 
 const validateKratosToken = async (ctx) => {
   try {
+    const startTime = performance.now();
     const res = await rp(`${config.kratosOrigin}/sessions/whoami`, { headers: ctx.req.headers });
     const kratos = JSON.parse(res);
+    const endTime = performance.now();
+    logger.info({
+      startTime,
+      endTime,
+      totalTime: endTime - startTime,
+    }, 'Time to Kratos whoami call');
     if (kratos?.identity?.id) {
       ctx.state.user = { userId: kratos.identity.id, isKratos: true };
       return true;
