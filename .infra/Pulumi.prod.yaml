@@ -4,16 +4,13 @@ config:
   gateway:debeziumDbUser:
     secure: AAABAD3UsX0N4DL09nVRVJZ2uM/6FaENmEOzbwj8XFNfLZxVb9KGuQ==
   gateway:env:
-    submitArticleThreshold:
-      secure: AAABAEwxMDWanfaCtFU+qxqTwbaIzZloAvHe0fc6aCkJ6UQ=
     accessSecret:
       secure: AAABAOgGOPp2psPjjfgQHY7iQdsYdarlUFcI2qUSUSDhljnLHuXjuQc0qDG0mRbgVI0dXFkX0aTlRZ5+68zacA==
     analyticsUrl:
       secure: AAABAJkGVEQzj8UJ2fymkRIMrcjMtnzCOti2PdSniVYSP7beZHDnxPmpr+08UHw1m4xZtQ==
     apiSecret:
       secure: AAABAHQnHsfEQMSAZQTxPGaQDcrBRcfzyt0k+QSgtkLpYyDea1jkA20rW+VsbtDDY8jndj21NIiTJVws+6OjYA==
-    apiUrl:
-      secure: AAABADdHghD5xRqLfDsKmgWDOivqiwUwN9QxCF7Bqh8z6Uo43/oR83C0
+    apiUrl: http://api-private
     besticonUrl:
       secure: AAABAL3ip6o8hb2h0a1ProB1IJa39uA6Wq6GNvgqgl2q897sEelsZ598LBmuF/hNcA==
     bluesnapApiKey:
@@ -77,6 +74,8 @@ config:
       secure: AAABAL2fT0TA7VJ86QZJcEtLjbGqiykyrtPYQrhbZWunhI9LHo1jvlJdtfeZd23LUg1KEgvEgrWhlfaFCWuTjhhrEJ10Sd5nKyDexnXWTnLX9xjl8G6J/hE+ni+oAAxNJpIxnjg=
     slackWebhook:
       secure: AAABAAFLY0icakYeqt+Md5z4GPC5KR7hMz+AUYrNsTdYliWLoGxYHLqy9DIohJ489N8bxVE+XVTL9tDdRk/CdgJ4FLCwIKGecSiuLTBnv2YBXVHKdEP6AJXevkzwjBXBS9RD/og8dORkiys6nlG7fsM=
+    submitArticleThreshold:
+      secure: AAABAEwxMDWanfaCtFU+qxqTwbaIzZloAvHe0fc6aCkJ6UQ=
     webappOrigin:
       secure: AAABAIqlleKQsN1FpB1M2kfuP7qap03jqkB+QfZP4EoApt+twCEs2nbqCT07ljv700WuVRs=
   gateway:k8s:
