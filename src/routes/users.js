@@ -4,13 +4,10 @@ import _ from 'lodash';
 import { ForbiddenError, ValidationError } from '../errors';
 import userModel from '../models/user';
 import role from '../models/role';
-import { setTrackingId } from '../tracking';
-import config from '../config';
-import { addSubdomainOpts } from '../cookies';
 import upload from '../upload';
 import { uploadAvatar } from '../cloudinary';
 import { bootSharedLogic } from './boot';
-import { validateToken } from '../auth';
+import { logout, validateToken } from '../auth';
 
 const updateUser = async (userId, user, newProfile) => {
   await userModel.update(userId, newProfile);
@@ -18,27 +15,6 @@ const updateUser = async (userId, user, newProfile) => {
 
 const deleteUser = async (userId) => {
   await userModel.deleteAccount(userId);
-};
-
-const logout = (ctx) => {
-  setTrackingId(ctx, undefined);
-  ctx.cookies.set(
-    config.cookies.auth.key,
-    undefined,
-    addSubdomainOpts(ctx, config.cookies.auth.opts),
-  );
-  ctx.cookies.set(
-    config.cookies.refreshToken.key,
-    undefined,
-    addSubdomainOpts(ctx, config.cookies.refreshToken.opts),
-  );
-  ctx.cookies.set(
-    config.cookies.referral.key,
-    undefined,
-    addSubdomainOpts(ctx, config.cookies.referral.opts),
-  );
-  ctx.status = 204;
-  return ctx;
 };
 
 const router = Router({

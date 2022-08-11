@@ -1,6 +1,6 @@
 import Router from 'koa-router';
 import pTimeout from 'p-timeout';
-import { validateToken } from '../auth';
+import { logout, validateToken } from '../auth';
 import generateId from '../generateId';
 import visit from '../models/visit';
 import flagsmith from '../flagsmith';
@@ -8,8 +8,7 @@ import config from '../config';
 import userModel from '../models/user';
 import provider from '../models/provider';
 import role from '../models/role';
-import { setSessionId, setTrackingId } from '../tracking';
-import { ForbiddenError } from '../errors';
+import { setSessionId } from '../tracking';
 import { setAuthCookie } from '../cookies';
 import {
   getAlertsFromAPI,
@@ -109,6 +108,32 @@ const bootBaseResponse = async (
 
 const getTrackingId = (ctx) => ctx.state?.user?.userId || ctx.trackingId;
 
+const annonymouseBootResponse = async (
+  ctx,
+  visitId,
+  visitPromise,
+  now,
+  referral,
+  trackingId,
+  shouldLogout,
+) => {
+  const base = await bootBaseResponse(
+    ctx,
+    visitId,
+    visitPromise,
+    now,
+    referral,
+  );
+  return {
+    ...base,
+    shouldLogout,
+    user: {
+      ...base.user,
+      id: trackingId,
+    },
+  };
+};
+
 export const bootSharedLogic = async (ctx, shouldRefreshToken) => {
   const trackingId = getTrackingId(ctx);
 
@@ -126,61 +151,79 @@ export const bootSharedLogic = async (ctx, shouldRefreshToken) => {
      * As we still need to support legacy users we temporary add a context for isKratos users
      * This way we can determine who should query which database
      */
-    const { userId, isKratos } = ctx.state.user;
+    const {
+      userId,
+      isKratos,
+    } = ctx.state.user;
     const userRequests = isKratos
       ? [getUserFromAPI(ctx), [], []]
       : [userModel.getById(userId), provider.getByUserId(userId), role.getByUserId(userId)];
-    const [user, userProvider, roles] = await Promise.all(userRequests);
+    try {
+      const [user, userProvider, roles] = await Promise.all(userRequests);
+      if (!user) {
+        returnObject = await annonymouseBootResponse(
+          ctx,
+          visitId,
+          visitPromise,
+          now,
+          referral,
+          trackingId,
+          true,
+        );
+        await logout(ctx);
+      } else {
+        const accessToken = shouldRefreshToken
+          ? await setAuthCookie(ctx, user.id, roles)
+          : undefined;
 
-    if (!user) {
-      setTrackingId(ctx, null);
-      throw new ForbiddenError();
-    }
-
-    const accessToken = shouldRefreshToken
-      ? await setAuthCookie(ctx, user.id, roles)
-      : undefined;
-
-    const base = await bootBaseResponse(
-      ctx,
-      visitId,
-      visitPromise,
-      now,
-      referral,
-      user,
-    );
-    returnObject = {
-      ...base,
-      user: {
-        ...base.user,
-        ...user,
-        providers: [userProvider.provider],
-        roles,
-        permalink: `${config.webappOrigin}/${user.username || user.id}`,
-      },
-      accessToken,
-    };
-    if (!user.infoConfirmed) {
-      returnObject = {
-        ...returnObject,
-        registrationLink: `${config.webappOrigin}/register`,
-      };
+        const base = await bootBaseResponse(
+          ctx,
+          visitId,
+          visitPromise,
+          now,
+          referral,
+          user,
+        );
+        returnObject = {
+          ...base,
+          user: {
+            ...base.user,
+            ...user,
+            providers: [userProvider.provider],
+            roles,
+            permalink: `${config.webappOrigin}/${user.username || user.id}`,
+          },
+          accessToken,
+        };
+        if (!user.infoConfirmed) {
+          returnObject = {
+            ...returnObject,
+            registrationLink: `${config.webappOrigin}/register`,
+          };
+        }
+      }
+    } catch (error) {
+      ctx.log.error({ error }, 'failed to fetch user from API');
+      returnObject = await annonymouseBootResponse(
+        ctx,
+        visitId,
+        visitPromise,
+        now,
+        referral,
+        trackingId,
+        true,
+      );
+      await logout(ctx);
     }
   } else {
-    const base = await bootBaseResponse(
+    returnObject = await annonymouseBootResponse(
       ctx,
       visitId,
       visitPromise,
       now,
       referral,
+      trackingId,
     );
-    returnObject = {
-      ...base,
-      user: {
-        ...base.user,
-        id: trackingId,
-      },
-    };
   }
 
   updateUserVisit(ctx, now, referral, trackingId)

@@ -4,6 +4,8 @@ import config from './config';
 import refreshTokenModel from './models/refreshToken';
 import { ForbiddenError } from './errors';
 import logger from './logger';
+import { setTrackingId } from './tracking';
+import { addSubdomainOpts } from './cookies';
 
 const base64URLEncode = (str) => str.toString('base64')
   .replace(/\+/g, '-')
@@ -62,4 +64,35 @@ export const validateToken = async (ctx) => {
   }
 
   return validateRefreshToken(ctx);
+};
+
+export const logout = async (ctx) => {
+  setTrackingId(ctx, undefined);
+  ctx.cookies.set(
+    config.cookies.auth.key,
+    undefined,
+    addSubdomainOpts(ctx, config.cookies.auth.opts),
+  );
+  ctx.cookies.set(
+    config.cookies.refreshToken.key,
+    undefined,
+    addSubdomainOpts(ctx, config.cookies.refreshToken.opts),
+  );
+  ctx.cookies.set(
+    config.cookies.referral.key,
+    undefined,
+    addSubdomainOpts(ctx, config.cookies.referral.opts),
+  );
+
+  const { isKratos } = ctx.state.user;
+  if (isKratos) {
+    const logoutInit = await rp(`${config.kratosOrigin}/self-service/logout/browser`, { headers: ctx.req.headers });
+    const logoutFlow = JSON.parse(logoutInit);
+    if (logoutFlow?.logout_url) {
+      await rp(logoutFlow.logout_url, { headers: ctx.req.headers });
+    }
+  }
+
+  ctx.status = 204;
+  return ctx;
 };
