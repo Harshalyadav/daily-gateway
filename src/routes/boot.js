@@ -153,7 +153,7 @@ export const bootSharedLogic = async (ctx, shouldRefreshToken) => {
      */
     const {
       userId,
-      isKratos,
+      isKratos = false,
     } = ctx.state.user;
     const userRequests = isKratos
       ? [getUserFromAPI(ctx), [], []]
@@ -203,17 +203,21 @@ export const bootSharedLogic = async (ctx, shouldRefreshToken) => {
         }
       }
     } catch (error) {
-      ctx.log.error({ error }, 'failed to fetch user from API');
-      returnObject = await annonymouseBootResponse(
-        ctx,
-        visitId,
-        visitPromise,
-        now,
-        referral,
-        trackingId,
-        true,
-      );
-      await logout(ctx);
+      if (error.statusCode === 403) {
+        ctx.log.error({ error }, 'failed to fetch user from API');
+        returnObject = await annonymouseBootResponse(
+          ctx,
+          visitId,
+          visitPromise,
+          now,
+          referral,
+          trackingId,
+          true,
+        );
+        await logout(ctx);
+      } else {
+        throw error;
+      }
     }
   } else {
     returnObject = await annonymouseBootResponse(
