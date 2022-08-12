@@ -84,7 +84,7 @@ export const logout = async (ctx) => {
     addSubdomainOpts(ctx, config.cookies.referral.opts),
   );
 
-  const { isKratos = false } = ctx.state.user;
+  const { isKratos = false } = ctx.state.user || {};
   if (isKratos) {
     const logoutInit = await rp(`${config.kratosOrigin}/self-service/logout/browser`, { headers: ctx.req.headers });
     const logoutFlow = JSON.parse(logoutInit);
