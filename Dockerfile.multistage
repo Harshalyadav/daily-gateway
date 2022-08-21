@@ -1,0 +1,36 @@
+FROM node:16-alpine AS builder
+RUN apk add g++ make python3
+
+RUN mkdir -p /opt/app
+WORKDIR /opt/app
+
+COPY package.json .
+COPY yarn.lock .
+
+RUN \
+  apk --no-cache add \
+  libc6-compat
+
+RUN yarn
+
+COPY . .
+RUN yarn build
+
+FROM node:16-alpine
+RUN apk add g++ make python3
+
+RUN mkdir -p /opt/app
+WORKDIR /opt/app
+
+COPY package.json .
+COPY yarn.lock .
+
+RUN \
+  apk --no-cache add \
+  libc6-compat
+
+RUN yarn install --prod
+
+COPY --from=builder /opt/app/build .
+CMD ["yarn", "start"]
+

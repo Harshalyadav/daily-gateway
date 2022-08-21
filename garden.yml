@@ -1,0 +1,82 @@
+kind: Module
+type: container
+name: gateway
+dockerfile: "${var.dev ? 'Dockerfile.dev' : 'Dockerfile.multistage'}"
+exclude:
+  - debezium/**/*
+tasks:
+  - name: gateway-migrate
+    args: ['yarn', 'run', 'db:migrate:latest']
+    env: &env
+      PORT: 4000
+      MYSQL_USER: ${var.mysql-username}
+      MYSQL_PASSWORD: ${var.mysql-password}
+      MYSQL_DATABASE: ${var.gateway-database}
+      MYSQL_HOST: mysql
+      REDIS_HOST: redis
+      PUBSUB_EMULATOR_HOST: ${var.pubsub-host}
+      PUBSUB_PROJECT_ID: ${var.gcloud-project}
+      GCLOUD_PROJECT: ${var.gcloud-project}
+      COOKIES_DOMAIN: "${var.hostname}"
+      COOKIES_KEY: topsecret
+      GITHUB_CLIENT_ID: 7b514cee17923d0acedc
+      GITHUB_CLIENT_SECRET: 064d875c7b370d271be839242538c87ab8bb6f92
+      GOOGLE_CLIENT_ID: 234794427174-3uu0mjstrrrstvnjaabp5vmamftmb7gu.apps.googleusercontent.com
+      GOOGLE_CLIENT_SECRET: ZmNlwV6yMiJEL2FIpL95ZF1Y
+      URL_PREFIX: "http://${var.hostname}"
+      JWT_SECRET: '|r+.2!!!.Qf_-|63*%.D'
+      JWT_AUDIENCE: 'Daily Staging'
+      JWT_ISSUER: 'Daily API Staging'
+      CORS_ORIGIN: http://,chrome-extension://,moz-extension://,safari-web-extension://
+      API_URL: http://api
+      API_SECRET: topsecret
+      SCRAPER_SECRET: topsecret
+      PRIMARY_AUTH_ORIGIN: "http://${var.hostname}"
+      WEBAPP_ORIGIN: "http://${var.hostname}"
+      REFRESH_TOKEN_SECRET: topsecret
+      REFRESH_TOKEN_SALT: salt
+      FLAGSMITH_KEY: LZp89Rk56sytKH9AeHyCtF
+    dependencies:
+      - mysql
+  - name: gateway-pubsub-init
+    args: "${var.dev ? [ 'yarn', 'cloud:init' ] : ['node', './src/scripts/initPubsub.js']}"
+    env:
+      <<: *env
+    dependencies:
+      - pubsub
+services:
+  - name: gateway
+    devMode: &devMode
+      sync:
+        - source: src
+          target: /opt/app/src
+          exclude: [ node_modules ]
+          mode: one-way
+    dependencies:
+      - redis
+      - mysql
+      - gateway-migrate
+      - pubsub
+      - gateway-debezium
+    ports:
+      - name: http
+        containerPort: 4000
+        servicePort: 80
+    ingresses:
+      - path: /v1/auth
+        port: http
+    healthCheck:
+      httpGet:
+        path: /health
+        port: http
+    env:
+      <<: *env
+  - name: gateway-bg
+    devMode:
+      <<: *devMode
+    dependencies:
+      - gateway-pubsub-init
+      - gateway
+    env:
+      MODE: background
+      <<: *env

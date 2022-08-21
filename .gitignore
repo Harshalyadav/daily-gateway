@@ -1,4 +1,5 @@
 .idea/
+.garden/
 build/
 node_modules/
 app.yaml

@@ -1,0 +1,27 @@
+kind: Project
+name: gateway
+dotIgnoreFiles: [ .gitignore ]
+sources:
+  - name: db-services
+    repositoryUrl: git@github.com:dailydotdev/garden-dependencies.git#main
+environments:
+  - name: default
+#    variables:
+#      dev: true
+providers:
+  - name: local-kubernetes
+variables:
+  hostname: localhost
+  gateway-database: gateway
+  mysql-databases: gateway
+  mysql-username: root
+  mysql-password: root
+  pubsub-host: "pubsub:8085"
+  gcloud-project: local
+  debezium-tag: "2.0"
+
+  postgres-databases: api
+  postgres-username: postgres
+  postgres-password: 12345
+  postgres-healthcheck-database: api
+
