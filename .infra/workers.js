@@ -3,7 +3,6 @@ const workers = [
   { topic: 'settings-updated', subscription: 'settings-updated-redis' },
   { topic: 'user-updated', subscription: 'user-updated-mailing' },
   { topic: 'user-deleted', subscription: 'user-deleted-mailing' },
-  { topic: 'user-registered', subscription: 'user-registered-slack' },
   { topic: 'user-reputation-updated', subscription: 'update-reputation' },
   {
     topic: 'user-registered',

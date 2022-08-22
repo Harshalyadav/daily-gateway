@@ -1,4 +1,3 @@
-import slackNotification from './slackNotification';
 import updateMailingList from './updateMailingList';
 import updateReputation from './updateReputation';
 import updateReferralContest from './updateReferralContest';
@@ -11,7 +10,6 @@ import updateSettings from './updateSettings';
 import deleteUserFromMailingList from './deleteUserFromMailingList';
 
 const workers = [
-  slackNotification,
   updateMailingList,
   updateReputation,
   updateReferralContest,

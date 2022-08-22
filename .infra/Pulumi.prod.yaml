@@ -72,8 +72,6 @@ config:
       secure: AAABAMPSuNNSBFrLNxYLxSH8qbyX3DDw22ntVV0310NBDoFirG1wIrR1Y7EuIw==
     sendgridApiKey:
       secure: AAABAL2fT0TA7VJ86QZJcEtLjbGqiykyrtPYQrhbZWunhI9LHo1jvlJdtfeZd23LUg1KEgvEgrWhlfaFCWuTjhhrEJ10Sd5nKyDexnXWTnLX9xjl8G6J/hE+ni+oAAxNJpIxnjg=
-    slackWebhook:
-      secure: AAABAAFLY0icakYeqt+Md5z4GPC5KR7hMz+AUYrNsTdYliWLoGxYHLqy9DIohJ489N8bxVE+XVTL9tDdRk/CdgJ4FLCwIKGecSiuLTBnv2YBXVHKdEP6AJXevkzwjBXBS9RD/og8dORkiys6nlG7fsM=
     submitArticleThreshold:
       secure: AAABAEwxMDWanfaCtFU+qxqTwbaIzZloAvHe0fc6aCkJ6UQ=
     webappOrigin:
