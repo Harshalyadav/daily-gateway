@@ -10,10 +10,11 @@ const router = Router();
 const setReferral = (ctx) => {
   const { r: referral } = ctx.request.query;
   if (referral) {
-    ctx.log.info({ referral }, 'redirecting by referral');
+    const cleanReferral = referral.replace(/(\r\n|\n|\r)/gm, '');
+    ctx.log.info({ referral: cleanReferral }, 'redirecting by referral');
     ctx.cookies.set(
       config.cookies.referral.key,
-      referral,
+      cleanReferral,
       addSubdomainOpts(ctx, config.cookies.referral.opts),
     );
   }
