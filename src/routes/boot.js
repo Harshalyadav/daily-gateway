@@ -203,7 +203,7 @@ export const bootSharedLogic = async (ctx, shouldRefreshToken) => {
         }
       }
     } catch (error) {
-      if (error.statusCode === 403) {
+      if (error.statusCode === 403 || error.statusCode === 404) {
         ctx.log.error({ error }, 'failed to fetch user from API');
         returnObject = await annonymouseBootResponse(
           ctx,
