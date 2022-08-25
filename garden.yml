@@ -23,7 +23,7 @@ tasks:
       GITHUB_CLIENT_SECRET: 064d875c7b370d271be839242538c87ab8bb6f92
       GOOGLE_CLIENT_ID: 234794427174-3uu0mjstrrrstvnjaabp5vmamftmb7gu.apps.googleusercontent.com
       GOOGLE_CLIENT_SECRET: ZmNlwV6yMiJEL2FIpL95ZF1Y
-      URL_PREFIX: "http://${var.hostname}"
+      URL_PREFIX: "http://${var.api-hostname}"
       JWT_SECRET: '|r+.2!!!.Qf_-|63*%.D'
       JWT_AUDIENCE: 'Daily Staging'
       JWT_ISSUER: 'Daily API Staging'
@@ -31,7 +31,7 @@ tasks:
       API_URL: http://api
       API_SECRET: topsecret
       SCRAPER_SECRET: topsecret
-      PRIMARY_AUTH_ORIGIN: "http://${var.hostname}"
+      PRIMARY_AUTH_ORIGIN: "http://${var.api-hostname}"
       WEBAPP_ORIGIN: "http://${var.hostname}"
       REFRESH_TOKEN_SECRET: topsecret
       REFRESH_TOKEN_SALT: salt
@@ -63,8 +63,9 @@ services:
         containerPort: 4000
         servicePort: 80
     ingresses:
-      - path: /v1/auth
+      - path: /
         port: http
+        hostname: ${var.api-hostname}
     healthCheck:
       httpGet:
         path: /health

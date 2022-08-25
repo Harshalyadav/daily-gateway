@@ -11,6 +11,11 @@ environments:
 providers:
   - name: local-kubernetes
 variables:
+  enabledServices:
+    mysql: true
+    pubsub: true
+    redis: true
+  api-hostname: localhost
   hostname: localhost
   gateway-database: gateway
   mysql-databases: gateway
@@ -19,9 +24,3 @@ variables:
   pubsub-host: "pubsub:8085"
   gcloud-project: local
   debezium-tag: "2.0"
-
-  postgres-databases: api
-  postgres-username: postgres
-  postgres-password: 12345
-  postgres-healthcheck-database: api
-
