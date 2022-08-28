@@ -17,6 +17,7 @@ tasks:
       PUBSUB_EMULATOR_HOST: ${var.pubsub-host}
       PUBSUB_PROJECT_ID: ${var.gcloud-project}
       GCLOUD_PROJECT: ${var.gcloud-project}
+      KRATOS_ORIGIN: http://kratos:4433
       COOKIES_DOMAIN: "${var.hostname}"
       COOKIES_KEY: topsecret
       GITHUB_CLIENT_ID: 7b514cee17923d0acedc
