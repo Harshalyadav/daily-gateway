@@ -90,6 +90,15 @@ export const logout = async (ctx) => {
     const logoutFlow = JSON.parse(logoutInit);
     if (logoutFlow?.logout_url) {
       await rp(logoutFlow.logout_url, { headers: ctx.req.headers });
+      ctx.cookies.set('ory_kratos_continuity');
+      ctx.cookies.set('ory_kratos_session');
+      // Remove all existing CSRF tokens
+      const cookies = ctx.req.headers.cookie.split(';');
+      cookies.forEach((cookie) => {
+        if (cookie.replace(/\s/, '').indexOf('csrf_token_') === 0) {
+          ctx.cookies.set(cookie.split('=')[0].trim());
+        }
+      });
     }
   }
 
