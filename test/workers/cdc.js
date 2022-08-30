@@ -8,7 +8,6 @@ import {
   participantEligilbleTopic,
   userDeletedTopic,
   userRegisteredTopic,
-  userUpdatedTopic,
   usernameChangedTopic,
 } from '../../src/pubsub';
 import db, { migrate, toCamelCase } from '../../src/db';
@@ -47,37 +46,6 @@ describe('cdc', () => {
       }),
     );
     expect(publishEventStub.calledWith(userRegisteredTopic, toCamelCase(user))).to.be.ok;
-  });
-
-  it('should notify on user update', async () => {
-    await db.insert(baseUser).into('users');
-    const [user] = await db.select().from('users').where('id', '=', baseUser.id).limit(1);
-    const after = {
-      ...user,
-      name: 'Ido',
-    };
-    await db('users').update({ name: after.name }).where('id', '=', baseUser.id);
-    await expectSuccessfulBackground(
-
-      worker,
-      mockChangeMessage({
-        before: user,
-        after,
-        op: 'u',
-        table: 'users',
-      }),
-    );
-    expect(publishEventStub.calledWith(
-      userUpdatedTopic,
-      {
-        user: toCamelCase({
-          ...user,
-          created_at: user.created_at.toISOString(),
-          updated_at: user.updated_at.toISOString(),
-        }),
-        newProfile: toCamelCase(after),
-      },
-    )).to.be.ok;
   });
 
   it('should not notify on user update when reputation changes', async () => {

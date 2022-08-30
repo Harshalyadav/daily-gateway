@@ -93,7 +93,7 @@ const authenticateToken = async (ctx, redirectUri, providerName, providerCode) =
         email: hasEmail ? profile.email : undefined,
         profileConfirmed: false,
         infoConfirmed: false,
-        createdAt: Date.now(),
+        createdAt: new Date(),
         referral,
       }),
       provider.add(userId, providerName, profile.id),
