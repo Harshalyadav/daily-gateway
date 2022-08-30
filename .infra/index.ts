@@ -16,7 +16,7 @@ import {
   getFullSubscriptionLabel,
   getImageTag,
   getMemoryAndCpuMetrics,
-  getPubSubUndeliveredMessagesMetric, getVpcNativeCluster,
+  getPubSubUndeliveredMessagesMetric, getVpcNativeCluster, gracefulTerminationHook,
   k8sServiceAccountToIdentity,
   location,
 } from '@dailydotdev/pulumi-common';
@@ -176,13 +176,7 @@ const deployKubernetesResources = (name: string, isPrimary: boolean, {
           requests: limits,
           limits,
         },
-        lifecycle: {
-          preStop: {
-            exec: {
-              command: ["/bin/bash", "-c", "sleep 10"],
-            }
-          }
-        }
+        lifecycle: gracefulTerminationHook(),
       },
     ],
     maxReplicas: 10,
