@@ -1,7 +1,6 @@
 const workers = [
   { topic: 'alerts-updated', subscription: 'alerts-updated-redis' },
   { topic: 'settings-updated', subscription: 'settings-updated-redis' },
-  { topic: 'user-reputation-updated', subscription: 'update-reputation' },
   {
     topic: 'user-registered',
     subscription: 'user-registered-referral-contest',
