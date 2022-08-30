@@ -2,8 +2,10 @@ import rp from 'request-promise-native';
 import config from './config';
 
 const getHeaders = (ctx) => {
-  if (!ctx.state.user || !ctx.state.user.userId) {
-    return {};
+  if (!ctx.state?.user || !ctx.state.user.userId) {
+    return {
+      authorization: `Service ${config.apiSecret}`,
+    };
   }
 
   return {
@@ -13,7 +15,7 @@ const getHeaders = (ctx) => {
   };
 };
 
-const getFromDailyApi = async (ctx, method, route, params = {}) => {
+const queryDailyApi = async (ctx, method, route, params = {}) => {
   const headers = getHeaders(ctx);
   const res = await rp({
     method,
@@ -28,10 +30,12 @@ const getFromDailyApi = async (ctx, method, route, params = {}) => {
   return JSON.parse(res);
 };
 
-export const getFromDailyGraphQLApi = (ctx, query) => getFromDailyApi(ctx, 'POST', '/graphql', query);
+export const getFromDailyGraphQLApi = (ctx, query) => queryDailyApi(ctx, 'POST', '/graphql', query);
 
-export const getSettingsFromAPI = (ctx) => getFromDailyApi(ctx, 'GET', '/settings');
+export const getSettingsFromAPI = (ctx) => queryDailyApi(ctx, 'GET', '/settings');
 
-export const getAlertsFromAPI = (ctx) => getFromDailyApi(ctx, 'GET', '/alerts');
+export const getAlertsFromAPI = (ctx) => queryDailyApi(ctx, 'GET', '/alerts');
 
-export const getUserFromAPI = (ctx) => getFromDailyApi(ctx, 'GET', '/whoami');
+export const getUserFromAPI = (ctx) => queryDailyApi(ctx, 'GET', '/whoami');
+
+export const addUserToAPI = (ctx, data) => queryDailyApi(ctx, 'POST', '/p/newUser', data);

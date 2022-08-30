@@ -11,6 +11,7 @@ import { getTrackingId, setTrackingId } from '../tracking';
 import { ForbiddenError } from '../errors';
 import { generateChallenge } from '../auth';
 import { addSubdomainOpts, setAuthCookie } from '../cookies';
+import { addUserToAPI } from '../integration';
 
 const router = Router({
   prefix: '/auth',
@@ -76,14 +77,25 @@ const authenticateToken = async (ctx, redirectUri, providerName, providerCode) =
   } else {
     const userId = getTrackingId(ctx);
     const hasEmail = profile.email && profile.email.indexOf('users.noreply.github.com') < 0;
+    const referral = ctx.cookies.get(config.cookies.referral.key, config.cookies.referral.opts);
     [user] = await Promise.all([
       userModel.add(
         userId,
         profile.name,
         hasEmail ? profile.email : undefined,
         profile.image || fallbackAvatar,
-        ctx.cookies.get(config.cookies.referral.key, config.cookies.referral.opts),
+        referral,
       ),
+      addUserToAPI({}, {
+        id: userId,
+        name: profile.name,
+        image: profile.image || fallbackAvatar,
+        email: hasEmail ? profile.email : undefined,
+        profileConfirmed: false,
+        infoConfirmed: false,
+        createdAt: Date.now(),
+        referral,
+      }),
       provider.add(userId, providerName, profile.id),
     ]);
     if (user.referral) {

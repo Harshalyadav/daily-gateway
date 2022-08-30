@@ -8,6 +8,7 @@ import upload from '../upload';
 import { uploadAvatar } from '../cloudinary';
 import { bootSharedLogic } from './boot';
 import { logout, validateToken } from '../auth';
+import { getFromDailyGraphQLApi } from '../integration';
 
 const updateUser = async (userId, user, newProfile) => {
   await userModel.update(userId, newProfile);
@@ -37,29 +38,44 @@ router.put(
   '/me',
   validator(
     {
-      body: object().keys({
-        name: string().required().trim().min(1)
-          .max(50),
-        email: string().email().required(),
-        company: string().allow(null).max(50),
-        title: string().allow(null).max(50),
-        acceptedMarketing: boolean(),
-        username: string()
-          .required()
-          .regex(/^@?(\w){1,15}$/),
-        bio: string().allow(null).max(160),
-        twitter: string()
-          .allow(null)
-          .regex(/^@?(\w){1,15}$/),
-        github: string()
-          .allow(null)
-          .regex(/^@?([\w-]){1,39}$/i),
-        hashnode: string()
-          .allow(null)
-          .regex(/^@?([\w-]){1,39}$/i),
-        timezone: string().allow(null).max(50),
-        portfolio: string().allow(null),
-      }),
+      body: object()
+        .keys({
+          name: string()
+            .required()
+            .trim()
+            .min(1)
+            .max(50),
+          email: string()
+            .email()
+            .required(),
+          company: string()
+            .allow(null)
+            .max(50),
+          title: string()
+            .allow(null)
+            .max(50),
+          acceptedMarketing: boolean(),
+          username: string()
+            .required()
+            .regex(/^@?(\w){1,15}$/),
+          bio: string()
+            .allow(null)
+            .max(160),
+          twitter: string()
+            .allow(null)
+            .regex(/^@?(\w){1,15}$/),
+          github: string()
+            .allow(null)
+            .regex(/^@?([\w-]){1,39}$/i),
+          hashnode: string()
+            .allow(null)
+            .regex(/^@?([\w-]){1,39}$/i),
+          timezone: string()
+            .allow(null)
+            .max(50),
+          portfolio: string()
+            .allow(null),
+        }),
     },
     { stripUnknown: true },
   ),
@@ -76,43 +92,72 @@ router.put(
           body[key] = body[key].replace('@', '');
         }
       });
+
+      const {
+        id,
+        reputation,
+        referralLink,
+        createdAt,
+        premium,
+        ...restUser
+      } = user;
+
       const newProfile = {
-        ...user,
+        ...restUser,
         acceptedMarketing: true,
         ...body,
         infoConfirmed: true,
       };
-      const dup = await userModel.checkDuplicateEmail(userId, newProfile.email);
-      if (dup) {
-        throw new ValidationError('email', 'email already exists');
-      }
       ctx.log.info(`updating profile for ${userId}`);
-      try {
-        await updateUser(userId, user, newProfile);
-      } catch (err) {
-        if (err.code === 'ER_DUP_ENTRY') {
-          if (err.sqlMessage.indexOf('users_username_unique') > -1) {
-            throw new ValidationError('username', 'username already exists');
-          }
-          if (err.sqlMessage.indexOf('users_twitter_unique') > -1) {
-            throw new ValidationError(
-              'twitter',
-              'twitter handle already exists',
-            );
-          }
-          if (err.sqlMessage.indexOf('users_github_unique') > -1) {
-            throw new ValidationError('github', 'github handle already exists');
-          }
-          if (err.sqlMessage.indexOf('users_hashnode_unique') > -1) {
-            throw new ValidationError(
-              'hashnode',
-              'hashnode handle already exists',
-            );
-          }
+
+      const res = await getFromDailyGraphQLApi(ctx, {
+        query: `mutation UpdateUserProfile($data: UpdateUserInput) {
+        updateUserProfile(data: $data) {
+          id
         }
-        throw err;
       }
-      ctx.body = newProfile;
+      `,
+        variables: {
+          data: newProfile,
+        },
+      });
+
+      if (res.errors?.length) {
+        const errors = JSON.parse(res.errors[0]?.message);
+        if (errors.name) {
+          throw new ValidationError('name', 'name is not a correct format');
+        }
+        if (errors.username) {
+          throw new ValidationError('username', 'username already exists');
+        }
+        if (errors.email) {
+          throw new ValidationError('email', 'email already exists');
+        }
+        if (errors.github) {
+          throw new ValidationError('github', 'github handle already exists');
+        }
+        if (errors.twitter) {
+          throw new ValidationError(
+            'twitter',
+            'twitter handle already exists',
+          );
+        }
+        if (errors.hashnode) {
+          throw new ValidationError(
+            'hashnode',
+            'hashnode handle already exists',
+          );
+        }
+      }
+
+      ctx.body = {
+        id,
+        reputation,
+        referralLink,
+        createdAt,
+        premium,
+        ...newProfile,
+      };
       ctx.status = 200;
     } else {
       throw new ForbiddenError();
@@ -127,7 +172,10 @@ router.get('/me/info', async (ctx) => {
     if (!user) {
       throw new ForbiddenError();
     }
-    ctx.body = { name: user.name, email: user.email };
+    ctx.body = {
+      name: user.name,
+      email: user.email,
+    };
     ctx.status = 200;
   } else {
     throw new ForbiddenError();
@@ -165,7 +213,10 @@ router.post('/me/image', async (ctx) => {
   if (ctx.state.user) {
     const { userId } = ctx.state.user;
     const { file } = await upload(ctx.req, {
-      limits: { files: 1, fileSize: 5 * 1024 * 1024 },
+      limits: {
+        files: 1,
+        fileSize: 5 * 1024 * 1024,
+      },
     });
     ctx.log.info(`updating image for ${userId}`);
     const avatarUrl = await uploadAvatar(userId, file);

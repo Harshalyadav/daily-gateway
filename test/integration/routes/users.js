@@ -11,6 +11,25 @@ import refreshTokenModel from '../../../src/models/refreshToken';
 import { sign } from '../../../src/jwt';
 import { generateChallenge } from '../../../src/auth';
 import visit from '../../../src/models/visit';
+import config from '../../../src/config';
+
+const defaultUser = {
+  id: '1',
+  bio: null,
+  github: null,
+  hashnode: null,
+  name: 'Ido',
+  image: 'https://daily.dev/ido.jpg',
+  createdAt: new Date(),
+  twitter: null,
+  username: 'idoshamun',
+  infoConfirmed: true,
+};
+const mockUserApi = (expected = defaultUser) => {
+  nock(config.apiUrl)
+    .get('/whoami')
+    .reply(200, JSON.stringify(expected));
+};
 
 describe('users routes', () => {
   let request;
@@ -30,6 +49,10 @@ describe('users routes', () => {
     server.close();
   });
 
+  afterEach(() => {
+    nock.cleanAll();
+  });
+
   describe('me', () => {
     let accessToken;
 
@@ -42,35 +65,32 @@ describe('users routes', () => {
     });
 
     it('should return registered user profile', async () => {
+      mockUserApi();
       const res = await request
         .get('/v1/users/me')
         .set('Cookie', [`da3=${accessToken.token}`])
         .expect(200);
 
+      const { createdAt, ...userCheck } = defaultUser;
+
       delete res.body.createdAt;
-      expect(res.body).to.deep.equal({
-        id: '1',
-        providers: ['github'],
-        name: 'John',
-        image: 'https://daily.dev/john.jpg',
-        email: 'john@daily.dev',
-        username: 'john',
-        infoConfirmed: false,
-        premium: false,
-        acceptedMarketing: true,
-        roles: [],
-        reputation: 10,
-        permalink: 'http://127.0.0.1:5002/john',
-        registrationLink: 'http://127.0.0.1:5002/register',
-        referralLink: 'https://api.daily.dev/get?r=john',
-        visitId: res.body.visitId,
-        sessionId: res.body.sessionId,
-        firstVisit: res.body.firstVisit,
-        isFirstVisit: res.body.isFirstVisit,
-      });
+      expect(res.body)
+        .to
+        .deep
+        .equal({
+          ...userCheck,
+          permalink: 'http://127.0.0.1:5002/idoshamun',
+          providers: ['github'],
+          roles: [],
+          visitId: res.body.visitId,
+          sessionId: res.body.sessionId,
+          firstVisit: res.body.firstVisit,
+          isFirstVisit: res.body.isFirstVisit,
+        });
     });
 
     it('should return profile with roles', async () => {
+      mockUserApi();
       await role.add('1', 'admin');
       await role.add('1', 'moderator');
 
@@ -79,36 +99,34 @@ describe('users routes', () => {
         .set('Cookie', [`da3=${accessToken.token}`])
         .expect(200);
 
+      const { createdAt, ...userCheck } = defaultUser;
       delete res.body.createdAt;
-      expect(res.body).to.deep.equal({
-        id: '1',
-        providers: ['github'],
-        name: 'John',
-        image: 'https://daily.dev/john.jpg',
-        email: 'john@daily.dev',
-        username: 'john',
-        infoConfirmed: false,
-        premium: false,
-        acceptedMarketing: true,
-        roles: ['admin', 'moderator'],
-        reputation: 10,
-        permalink: 'http://127.0.0.1:5002/john',
-        registrationLink: 'http://127.0.0.1:5002/register',
-        referralLink: 'https://api.daily.dev/get?r=john',
-        visitId: res.body.visitId,
-        sessionId: res.body.sessionId,
-        firstVisit: res.body.firstVisit,
-        isFirstVisit: res.body.isFirstVisit,
-      });
+      expect(res.body)
+        .to
+        .deep
+        .equal({
+          ...userCheck,
+          permalink: 'http://127.0.0.1:5002/idoshamun',
+          providers: ['github'],
+          roles: ['admin', 'moderator'],
+          visitId: res.body.visitId,
+          sessionId: res.body.sessionId,
+          firstVisit: res.body.firstVisit,
+          isFirstVisit: res.body.isFirstVisit,
+        });
     });
 
     it('should refresh access token when refresh token is available', async () => {
+      mockUserApi();
       const res = await request
         .get('/v1/users/me')
         .set('Cookie', ['da5=refresh'])
         .expect(200);
 
-      expect(res.body.accessToken).to.be.a('object');
+      expect(res.body.accessToken)
+        .to
+        .be
+        .a('object');
     });
 
     it('should throw forbidden error when refresh token is not valid', async () => {
@@ -128,13 +146,16 @@ describe('users routes', () => {
         .set('Cookie', ['da2=123'])
         .expect(200);
 
-      expect(res.body).to.deep.equal({
-        id: '123',
-        firstVisit: '2020-01-21T21:44:16.000Z',
-        referrer: '1',
-        visitId: res.body.visitId,
-        sessionId: res.body.sessionId,
-      });
+      expect(res.body)
+        .to
+        .deep
+        .equal({
+          id: '123',
+          firstVisit: '2020-01-21T21:44:16.000Z',
+          referrer: '1',
+          visitId: res.body.visitId,
+          sessionId: res.body.sessionId,
+        });
     });
 
     it('should return first visit time and referral when visit entry does not exist', async () => {
@@ -143,14 +164,17 @@ describe('users routes', () => {
         .set('Cookie', ['da2=123;da4=john'])
         .expect(200);
 
-      expect(res.body).to.deep.equal({
-        id: '123',
-        firstVisit: res.body.firstVisit,
-        isFirstVisit: true,
-        referrer: '1',
-        visitId: res.body.visitId,
-        sessionId: res.body.sessionId,
-      });
+      expect(res.body)
+        .to
+        .deep
+        .equal({
+          id: '123',
+          firstVisit: res.body.firstVisit,
+          isFirstVisit: true,
+          referrer: '1',
+          visitId: res.body.visitId,
+          sessionId: res.body.sessionId,
+        });
     });
 
     it('should add visit entry', async () => {
@@ -204,13 +228,31 @@ describe('users routes', () => {
         },
       })
         .get('/user')
-        .reply(200, { id: 'github_id', name: 'user', avatar_url: 'https://avatar.com' });
+        .reply(200, {
+          id: 'github_id',
+          name: 'user',
+          avatar_url: 'https://avatar.com',
+        });
+
+      nock(config.apiUrl)
+        .post('/p/newUser')
+        .reply(200, JSON.stringify({
+          status: 'ok',
+          userId: 'github_id',
+        }));
 
       const verifier = 'verify';
-      const code = await sign({ providerCode: 'code', provider: 'github', codeChallenge: generateChallenge(verifier) });
+      const code = await sign({
+        providerCode: 'code',
+        provider: 'github',
+        codeChallenge: generateChallenge(verifier),
+      });
       const { headers } = await request
         .post('/v1/auth/authenticate')
-        .send({ code: code.token, code_verifier: verifier })
+        .send({
+          code: code.token,
+          code_verifier: verifier,
+        })
         .expect(200);
 
       nock('https://api.github.com', {
@@ -220,7 +262,11 @@ describe('users routes', () => {
         },
       })
         .get('/user')
-        .reply(200, { id: 'github_id', name: 'user', avatar_url: 'https://avatar.com' });
+        .reply(200, {
+          id: 'github_id',
+          name: 'user',
+          avatar_url: 'https://avatar.com',
+        });
 
       nock('https://api.github.com', {
         reqheaders: {
@@ -236,10 +282,13 @@ describe('users routes', () => {
         .set('Cookie', headers['set-cookie'])
         .expect(200);
 
-      expect(res.body).to.deep.equal({
-        name: 'user',
-        email: 'email@foo.com',
-      });
+      expect(res.body)
+        .to
+        .deep
+        .equal({
+          name: 'user',
+          email: 'email@foo.com',
+        });
     });
   });
 
@@ -265,13 +314,34 @@ describe('users routes', () => {
         },
       })
         .get('/user')
-        .reply(200, { id: 'github_id', name: 'user', avatar_url: 'https://avatar.com' });
+        .reply(200, {
+          id: 'github_id',
+          name: 'user',
+          avatar_url: 'https://avatar.com',
+        });
+
+      nock(config.apiUrl)
+        .post('/p/newUser')
+        .reply(200, JSON.stringify({
+          status: 'ok',
+          userId: 'github_id',
+        }));
 
       const verifier = 'verify';
-      const code = await sign({ providerCode: 'code', provider: 'github', codeChallenge: generateChallenge(verifier) });
-      const { body, headers } = await request
+      const code = await sign({
+        providerCode: 'code',
+        provider: 'github',
+        codeChallenge: generateChallenge(verifier),
+      });
+      const {
+        body,
+        headers,
+      } = await request
         .post('/v1/auth/authenticate')
-        .send({ code: code.token, code_verifier: verifier })
+        .send({
+          code: code.token,
+          code_verifier: verifier,
+        })
         .expect(200);
 
       await role.add(body.id, 'admin');
@@ -282,7 +352,10 @@ describe('users routes', () => {
         .set('Cookie', headers['set-cookie'])
         .expect(200);
 
-      expect(res.body).to.deep.equal(['admin', 'moderator']);
+      expect(res.body)
+        .to
+        .deep
+        .equal(['admin', 'moderator']);
     });
   });
 
@@ -291,148 +364,207 @@ describe('users routes', () => {
       await userModel.add('id', 'John');
       const accessToken = await sign({ userId: 'id' }, null);
 
+      nock(config.apiUrl)
+        .post('/graphql')
+        .reply(200, {});
+
       const res = await request
         .put('/v1/users/me')
         .set('Cookie', [`da3=${accessToken.token}`])
         .set('Content-Type', 'application/json')
         .send({
-          name: 'John', email: 'john@acme.com', company: 'ACME', title: 'Developer', username: 'john',
+          name: 'John',
+          email: 'john@acme.com',
+          company: 'ACME',
+          title: 'Developer',
+          username: 'john',
         })
         .expect(200);
 
       delete res.body.createdAt;
-      expect(res.body).to.deep.equal({
-        id: 'id',
-        name: 'John',
-        email: 'john@acme.com',
-        company: 'ACME',
-        title: 'Developer',
-        infoConfirmed: true,
-        premium: false,
-        acceptedMarketing: true,
-        reputation: 10,
-        referralLink: 'https://api.daily.dev/get?r=id',
-        username: 'john',
-      });
+      expect(res.body)
+        .to
+        .deep
+        .equal({
+          id: 'id',
+          name: 'John',
+          email: 'john@acme.com',
+          company: 'ACME',
+          title: 'Developer',
+          infoConfirmed: true,
+          premium: false,
+          acceptedMarketing: true,
+          reputation: 10,
+          referralLink: 'https://api.daily.dev/get?r=id',
+          username: 'john',
+        });
     });
 
     it('should update the logged-in user timezone', async () => {
       await userModel.add('id', 'John');
       const accessToken = await sign({ userId: 'id' }, null);
 
+      nock(config.apiUrl)
+        .post('/graphql')
+        .reply(200, {});
+
       const res = await request
         .put('/v1/users/me')
         .set('Cookie', [`da3=${accessToken.token}`])
         .set('Content-Type', 'application/json')
         .send({
-          name: 'John', email: 'john@acme.com', company: 'ACME', title: 'Developer', username: 'john', timezone: 'Pacific/Midway',
+          name: 'John',
+          email: 'john@acme.com',
+          company: 'ACME',
+          title: 'Developer',
+          username: 'john',
+          timezone: 'Pacific/Midway',
         })
         .expect(200);
 
       delete res.body.createdAt;
-      expect(res.body).to.deep.equal({
-        id: 'id',
-        name: 'John',
-        email: 'john@acme.com',
-        company: 'ACME',
-        title: 'Developer',
-        infoConfirmed: true,
-        premium: false,
-        acceptedMarketing: true,
-        reputation: 10,
-        referralLink: 'https://api.daily.dev/get?r=id',
-        username: 'john',
-        timezone: 'Pacific/Midway',
-      });
+      expect(res.body)
+        .to
+        .deep
+        .equal({
+          id: 'id',
+          name: 'John',
+          email: 'john@acme.com',
+          company: 'ACME',
+          title: 'Developer',
+          infoConfirmed: true,
+          premium: false,
+          acceptedMarketing: true,
+          reputation: 10,
+          referralLink: 'https://api.daily.dev/get?r=id',
+          username: 'john',
+          timezone: 'Pacific/Midway',
+        });
     });
 
     it('should discard "at" sign prefix from handles', async () => {
       await userModel.add('id', 'John');
       const accessToken = await sign({ userId: 'id' }, null);
 
+      nock(config.apiUrl)
+        .post('/graphql')
+        .reply(200, {});
+
       const res = await request
         .put('/v1/users/me')
         .set('Cookie', [`da3=${accessToken.token}`])
         .set('Content-Type', 'application/json')
         .send({
-          name: 'John', email: 'john@acme.com', company: 'ACME', title: 'Developer', username: 'john', twitter: '@john',
+          name: 'John',
+          email: 'john@acme.com',
+          company: 'ACME',
+          title: 'Developer',
+          username: 'john',
+          twitter: '@john',
         })
         .expect(200);
 
       delete res.body.createdAt;
-      expect(res.body).to.deep.equal({
-        id: 'id',
-        name: 'John',
-        email: 'john@acme.com',
-        company: 'ACME',
-        title: 'Developer',
-        infoConfirmed: true,
-        premium: false,
-        acceptedMarketing: true,
-        reputation: 10,
-        referralLink: 'https://api.daily.dev/get?r=id',
-        username: 'john',
-        twitter: 'john',
-      });
+      expect(res.body)
+        .to
+        .deep
+        .equal({
+          id: 'id',
+          name: 'John',
+          email: 'john@acme.com',
+          company: 'ACME',
+          title: 'Developer',
+          infoConfirmed: true,
+          premium: false,
+          acceptedMarketing: true,
+          reputation: 10,
+          referralLink: 'https://api.daily.dev/get?r=id',
+          username: 'john',
+          twitter: 'john',
+        });
     });
 
     it('should allow hyphen in GitHub handle', async () => {
       await userModel.add('id', 'John');
       const accessToken = await sign({ userId: 'id' }, null);
 
+      nock(config.apiUrl)
+        .post('/graphql')
+        .reply(200, {});
+
       const res = await request
         .put('/v1/users/me')
         .set('Cookie', [`da3=${accessToken.token}`])
         .set('Content-Type', 'application/json')
         .send({
-          name: 'John', email: 'john@acme.com', company: 'ACME', title: 'Developer', username: 'john', github: 'john-acme',
+          name: 'John',
+          email: 'john@acme.com',
+          company: 'ACME',
+          title: 'Developer',
+          username: 'john',
+          github: 'john-acme',
         })
         .expect(200);
 
       delete res.body.createdAt;
-      expect(res.body).to.deep.equal({
-        id: 'id',
-        name: 'John',
-        email: 'john@acme.com',
-        company: 'ACME',
-        title: 'Developer',
-        infoConfirmed: true,
-        premium: false,
-        acceptedMarketing: true,
-        reputation: 10,
-        referralLink: 'https://api.daily.dev/get?r=id',
-        username: 'john',
-        github: 'john-acme',
-      });
+      expect(res.body)
+        .to
+        .deep
+        .equal({
+          id: 'id',
+          name: 'John',
+          email: 'john@acme.com',
+          company: 'ACME',
+          title: 'Developer',
+          infoConfirmed: true,
+          premium: false,
+          acceptedMarketing: true,
+          reputation: 10,
+          referralLink: 'https://api.daily.dev/get?r=id',
+          username: 'john',
+          github: 'john-acme',
+        });
     });
 
     it('should update the accepted marketing field', async () => {
       await userModel.add('id', 'John');
       const accessToken = await sign({ userId: 'id' }, null);
 
+      nock(config.apiUrl)
+        .post('/graphql')
+        .reply(200, {});
+
       const res = await request
         .put('/v1/users/me')
         .set('Cookie', [`da3=${accessToken.token}`])
         .set('Content-Type', 'application/json')
         .send({
-          name: 'John', email: 'john@acme.com', company: 'ACME', title: 'Developer', acceptedMarketing: true, username: 'john',
+          name: 'John',
+          email: 'john@acme.com',
+          company: 'ACME',
+          title: 'Developer',
+          acceptedMarketing: true,
+          username: 'john',
         })
         .expect(200);
 
       delete res.body.createdAt;
-      expect(res.body).to.deep.equal({
-        id: 'id',
-        name: 'John',
-        email: 'john@acme.com',
-        company: 'ACME',
-        title: 'Developer',
-        infoConfirmed: true,
-        premium: false,
-        acceptedMarketing: true,
-        reputation: 10,
-        referralLink: 'https://api.daily.dev/get?r=id',
-        username: 'john',
-      });
+      expect(res.body)
+        .to
+        .deep
+        .equal({
+          id: 'id',
+          name: 'John',
+          email: 'john@acme.com',
+          company: 'ACME',
+          title: 'Developer',
+          infoConfirmed: true,
+          premium: false,
+          acceptedMarketing: true,
+          reputation: 10,
+          referralLink: 'https://api.daily.dev/get?r=id',
+          username: 'john',
+        });
     });
 
     it('should throw bad request on duplicate email', async () => {
@@ -440,21 +572,40 @@ describe('users routes', () => {
       await userModel.add('id2', 'John2', 'john@acme.com');
       const accessToken = await sign({ userId: 'id' }, null);
 
+      nock(config.apiUrl)
+        .post('/graphql')
+        .reply(200, JSON.stringify({
+          errors: [
+            {
+              message: JSON.stringify({
+                email: true,
+              }),
+            },
+          ],
+        }));
+
       const res = await request
         .put('/v1/users/me')
         .set('Cookie', [`da3=${accessToken.token}`])
         .set('Content-Type', 'application/json')
         .send({
-          name: 'John', email: 'john@acme.com', company: 'ACME', title: 'Developer', username: 'john',
+          name: 'John',
+          email: 'john@acme.com',
+          company: 'ACME',
+          title: 'Developer',
+          username: 'john',
         })
         .expect(400);
 
-      expect(res.body).to.deep.equal({
-        code: 1,
-        message: 'email already exists',
-        field: 'email',
-        reason: 'email already exists',
-      });
+      expect(res.body)
+        .to
+        .deep
+        .equal({
+          code: 1,
+          message: 'email already exists',
+          field: 'email',
+          reason: 'email already exists',
+        });
     });
 
     it('should throw bad request on duplicate email when initial email is also the same', async () => {
@@ -462,21 +613,40 @@ describe('users routes', () => {
       await userModel.add('id2', 'John2', 'john@acme.com');
       const accessToken = await sign({ userId: 'id' }, null);
 
+      nock(config.apiUrl)
+        .post('/graphql')
+        .reply(200, JSON.stringify({
+          errors: [
+            {
+              message: JSON.stringify({
+                email: true,
+              }),
+            },
+          ],
+        }));
+
       const res = await request
         .put('/v1/users/me')
         .set('Cookie', [`da3=${accessToken.token}`])
         .set('Content-Type', 'application/json')
         .send({
-          name: 'John', email: 'john@acme.com', company: 'ACME', title: 'Developer', username: 'john',
+          name: 'John',
+          email: 'john@acme.com',
+          company: 'ACME',
+          title: 'Developer',
+          username: 'john',
         })
         .expect(400);
 
-      expect(res.body).to.deep.equal({
-        code: 1,
-        message: 'email already exists',
-        field: 'email',
-        reason: 'email already exists',
-      });
+      expect(res.body)
+        .to
+        .deep
+        .equal({
+          code: 1,
+          message: 'email already exists',
+          field: 'email',
+          reason: 'email already exists',
+        });
     });
 
     it('should throw bad request on duplicate username', async () => {
@@ -485,21 +655,38 @@ describe('users routes', () => {
       await userModel.update('id2', { username: 'idoshamun' });
       const accessToken = await sign({ userId: 'id' }, null);
 
+      nock(config.apiUrl)
+        .post('/graphql')
+        .reply(200, JSON.stringify({
+          errors: [
+            {
+              message: JSON.stringify({
+                username: true,
+              }),
+            },
+          ],
+        }));
+
       const res = await request
         .put('/v1/users/me')
         .set('Cookie', [`da3=${accessToken.token}`])
         .set('Content-Type', 'application/json')
         .send({
-          name: 'John', email: 'john@acme.com', username: 'IdoShamun',
+          name: 'John',
+          email: 'john@acme.com',
+          username: 'IdoShamun',
         })
         .expect(400);
 
-      expect(res.body).to.deep.equal({
-        code: 1,
-        message: 'username already exists',
-        field: 'username',
-        reason: 'username already exists',
-      });
+      expect(res.body)
+        .to
+        .deep
+        .equal({
+          code: 1,
+          message: 'username already exists',
+          field: 'username',
+          reason: 'username already exists',
+        });
     });
 
     it('should throw bad request on duplicate twitter handle', async () => {
@@ -508,21 +695,39 @@ describe('users routes', () => {
       await userModel.update('id2', { twitter: 'idoshamun' });
       const accessToken = await sign({ userId: 'id' }, null);
 
+      nock(config.apiUrl)
+        .post('/graphql')
+        .reply(200, JSON.stringify({
+          errors: [
+            {
+              message: JSON.stringify({
+                twitter: true,
+              }),
+            },
+          ],
+        }));
+
       const res = await request
         .put('/v1/users/me')
         .set('Cookie', [`da3=${accessToken.token}`])
         .set('Content-Type', 'application/json')
         .send({
-          name: 'John', email: 'john@acme.com', twitter: 'IdoShamun', username: 'john',
+          name: 'John',
+          email: 'john@acme.com',
+          twitter: 'IdoShamun',
+          username: 'john',
         })
         .expect(400);
 
-      expect(res.body).to.deep.equal({
-        code: 1,
-        message: 'twitter handle already exists',
-        field: 'twitter',
-        reason: 'twitter handle already exists',
-      });
+      expect(res.body)
+        .to
+        .deep
+        .equal({
+          code: 1,
+          message: 'twitter handle already exists',
+          field: 'twitter',
+          reason: 'twitter handle already exists',
+        });
     });
 
     it('should throw bad request on duplicate github handle', async () => {
@@ -531,21 +736,39 @@ describe('users routes', () => {
       await userModel.update('id2', { github: 'idoshamun' });
       const accessToken = await sign({ userId: 'id' }, null);
 
+      nock(config.apiUrl)
+        .post('/graphql')
+        .reply(200, JSON.stringify({
+          errors: [
+            {
+              message: JSON.stringify({
+                github: true,
+              }),
+            },
+          ],
+        }));
+
       const res = await request
         .put('/v1/users/me')
         .set('Cookie', [`da3=${accessToken.token}`])
         .set('Content-Type', 'application/json')
         .send({
-          name: 'John', email: 'john@acme.com', github: 'IdoShamun', username: 'john',
+          name: 'John',
+          email: 'john@acme.com',
+          github: 'IdoShamun',
+          username: 'john',
         })
         .expect(400);
 
-      expect(res.body).to.deep.equal({
-        code: 1,
-        message: 'github handle already exists',
-        field: 'github',
-        reason: 'github handle already exists',
-      });
+      expect(res.body)
+        .to
+        .deep
+        .equal({
+          code: 1,
+          message: 'github handle already exists',
+          field: 'github',
+          reason: 'github handle already exists',
+        });
     });
 
     it('should throw bad request on duplicate hashnode handle', async () => {
@@ -554,63 +777,127 @@ describe('users routes', () => {
       await userModel.update('id2', { hashnode: 'idoshamun' });
       const accessToken = await sign({ userId: 'id' }, null);
 
+      nock(config.apiUrl)
+        .post('/graphql')
+        .reply(200, JSON.stringify({
+          errors: [
+            {
+              message: JSON.stringify({
+                hashnode: true,
+              }),
+            },
+          ],
+        }));
+
+      nock(config.apiUrl)
+        .post('/graphql')
+        .reply(200, JSON.stringify({
+          errors: [
+            {
+              message: JSON.stringify({
+                hashnode: 'hashnode handle already exists',
+              }),
+            },
+          ],
+        }));
+
       const res = await request
         .put('/v1/users/me')
         .set('Cookie', [`da3=${accessToken.token}`])
         .set('Content-Type', 'application/json')
         .send({
-          name: 'John', email: 'john@acme.com', hashnode: 'IdoShamun', username: 'john',
+          name: 'John',
+          email: 'john@acme.com',
+          hashnode: 'IdoShamun',
+          username: 'john',
         })
         .expect(400);
 
-      expect(res.body).to.deep.equal({
-        code: 1,
-        message: 'hashnode handle already exists',
-        field: 'hashnode',
-        reason: 'hashnode handle already exists',
-      });
+      expect(res.body)
+        .to
+        .deep
+        .equal({
+          code: 1,
+          message: 'hashnode handle already exists',
+          field: 'hashnode',
+          reason: 'hashnode handle already exists',
+        });
     });
 
     it('should throw bad request on invalid username', async () => {
       await userModel.add('id', 'John');
       const accessToken = await sign({ userId: 'id' }, null);
 
+      nock(config.apiUrl)
+        .post('/graphql')
+        .reply(200, JSON.stringify({
+          errors: [
+            {
+              message: JSON.stringify({
+                username: true,
+              }),
+            },
+          ],
+        }));
+
       const res = await request
         .put('/v1/users/me')
         .set('Cookie', [`da3=${accessToken.token}`])
         .set('Content-Type', 'application/json')
         .send({
-          name: 'John', email: 'john@acme.com', username: 'john$%^',
+          name: 'John',
+          email: 'john@acme.com',
+          username: 'john$%^',
         })
         .expect(400);
 
-      expect(res.body).to.deep.equal({
-        code: 1,
-        field: 'username',
-        message: 'child "username" fails because ["username" with value "john&#x24;&#x25;&#x5e;" fails to match the required pattern: /^@?(\\w){1,15}$/]',
-        reason: '"username" with value "john&#x24;&#x25;&#x5e;" fails to match the required pattern: /^@?(\\w){1,15}$/',
-      });
+      expect(res.body)
+        .to
+        .deep
+        .equal({
+          code: 1,
+          field: 'username',
+          message: 'child "username" fails because ["username" with value "john&#x24;&#x25;&#x5e;" fails to match the required pattern: /^@?(\\w){1,15}$/]',
+          reason: '"username" with value "john&#x24;&#x25;&#x5e;" fails to match the required pattern: /^@?(\\w){1,15}$/',
+        });
     });
 
     it('should throw bad request on whitespace name', async () => {
       await userModel.add('id', 'John');
       const accessToken = await sign({ userId: 'id' }, null);
 
+      nock(config.apiUrl)
+        .post('/graphql')
+        .reply(200, JSON.stringify({
+          errors: [
+            {
+              message: JSON.stringify({
+                name: true,
+              }),
+            },
+          ],
+        }));
+
       const res = await request
         .put('/v1/users/me')
         .set('Cookie', [`da3=${accessToken.token}`])
         .set('Content-Type', 'application/json')
         .send({
-          name: '   ', email: 'john@acme.com', username: 'john$%^',
+          name: '   ',
+          email: 'john@acme.com',
+          username: 'john$%^',
         })
         .expect(400);
 
-      expect(res.body).to.deep.equal({
-        code: 1,
-        field: 'name',
-        message: 'child "name" fails because ["name" is not allowed to be empty]',
-        reason: '"name" is not allowed to be empty',
-      });
+      expect(res.body)
+        .to
+        .deep
+        .equal({
+          code: 1,
+          field: 'name',
+          message: 'child "name" fails because ["name" is not allowed to be empty]',
+          reason: '"name" is not allowed to be empty',
+        });
     });
   });
 
@@ -623,42 +910,54 @@ describe('users routes', () => {
 
     it('should return profile by id', async () => {
       await userModel.add('id', 'John', 'john@acme.com', 'https://acme.com');
-      await userModel.update('id', { username: 'idoshamun', bio: 'My bio' });
+      await userModel.update('id', {
+        username: 'idoshamun',
+        bio: 'My bio',
+      });
 
       const res = await request
         .get('/v1/users/id')
         .expect(200);
 
       delete res.body.createdAt;
-      expect(res.body).to.deep.equal({
-        id: 'id',
-        name: 'John',
-        image: 'https://acme.com',
-        username: 'idoshamun',
-        bio: 'My bio',
-        premium: false,
-        reputation: 10,
-      });
+      expect(res.body)
+        .to
+        .deep
+        .equal({
+          id: 'id',
+          name: 'John',
+          image: 'https://acme.com',
+          username: 'idoshamun',
+          bio: 'My bio',
+          premium: false,
+          reputation: 10,
+        });
     });
 
     it('should return profile by username', async () => {
       await userModel.add('id', 'John', 'john@acme.com', 'https://acme.com');
-      await userModel.update('id', { username: 'idoshamun', bio: 'My bio' });
+      await userModel.update('id', {
+        username: 'idoshamun',
+        bio: 'My bio',
+      });
 
       const res = await request
         .get('/v1/users/idoshamun')
         .expect(200);
 
       delete res.body.createdAt;
-      expect(res.body).to.deep.equal({
-        id: 'id',
-        name: 'John',
-        image: 'https://acme.com',
-        username: 'idoshamun',
-        bio: 'My bio',
-        premium: false,
-        reputation: 10,
-      });
+      expect(res.body)
+        .to
+        .deep
+        .equal({
+          id: 'id',
+          name: 'John',
+          image: 'https://acme.com',
+          username: 'idoshamun',
+          bio: 'My bio',
+          premium: false,
+          reputation: 10,
+        });
     });
   });
 });

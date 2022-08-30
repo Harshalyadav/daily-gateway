@@ -157,7 +157,7 @@ export const bootSharedLogic = async (ctx, shouldRefreshToken) => {
     } = ctx.state.user;
     const userRequests = isKratos
       ? [getUserFromAPI(ctx), [], []]
-      : [userModel.getById(userId), provider.getByUserId(userId), role.getByUserId(userId)];
+      : [getUserFromAPI(ctx), provider.getByUserId(userId), role.getByUserId(userId)];
     try {
       const [user, userProvider, roles] = await Promise.all(userRequests);
       if (!user) {

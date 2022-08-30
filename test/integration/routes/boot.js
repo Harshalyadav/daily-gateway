@@ -49,7 +49,19 @@ const mockKratos = (expected) => {
     .reply(200, JSON.stringify(expected));
 };
 
-const mockUserApi = (expected) => {
+const defaultUser = {
+  id: '1',
+  bio: null,
+  github: null,
+  hashnode: null,
+  name: 'Ido',
+  image: 'https://daily.dev/ido.jpg',
+  createdAt: new Date(),
+  twitter: null,
+  username: 'idoshamun',
+  infoConfirmed: true,
+};
+const mockUserApi = (expected = defaultUser) => {
   nock(config.apiUrl)
     .get('/whoami')
     .reply(200, JSON.stringify(expected));
@@ -104,6 +116,7 @@ describe('boot routes', () => {
 
   afterEach(() => {
     sinon.restore();
+    nock.cleanAll();
   });
 
   after(() => {
@@ -141,6 +154,8 @@ describe('boot routes', () => {
     const expected = { ...SETTINGS_DEFAULT, ...updates };
     const key = getUserRedisObjectKey(SETTINGS_PREFIX, userId);
 
+    mockUserApi();
+
     await setRedisObject(key, updates);
 
     const res = await request
@@ -164,6 +179,8 @@ describe('boot routes', () => {
 
     await setRedisObject(key, updates);
 
+    mockUserApi();
+
     const res = await request
       .get('/boot')
       .set('Cookie', [`da3=${accessToken.token}`])
@@ -183,6 +200,7 @@ describe('boot routes', () => {
 
     mockAlertsApi();
     mockSettingsApi(expected);
+    mockUserApi();
 
     const res = await request
       .get('/boot')
@@ -204,6 +222,7 @@ describe('boot routes', () => {
     const key = getUserRedisObjectKey(ALERTS_PREFIX, userId);
 
     await setRedisObject(key, expected);
+    mockUserApi();
 
     const res = await request
       .get('/boot')
@@ -224,6 +243,7 @@ describe('boot routes', () => {
 
     mockAlertsApi(expected);
     mockSettingsApi();
+    mockUserApi();
 
     const res = await request
       .get('/boot')
@@ -304,6 +324,7 @@ describe('boot routes', () => {
 
   it('should return registered user profile', async () => {
     mockFeatureFlagForUser('feat_limit_dev_card', false);
+    mockUserApi();
 
     const res = await request
       .get('/boot')
@@ -324,28 +345,24 @@ describe('boot routes', () => {
       .a('string');
     delete res.body.visit;
     delete res.body.user.createdAt;
+
+    const {
+      createdAt,
+      ...userExpected
+    } = defaultUser;
+
     expect(res.body)
       .to
       .deep
       .equal({
         user: {
-          id: '1',
-          providers: ['github'],
-          name: 'John',
-          image: 'https://daily.dev/john.jpg',
-          email: 'john@daily.dev',
-          infoConfirmed: false,
-          premium: false,
-          acceptedMarketing: true,
-          roles: [],
-          reputation: 10,
-          permalink: 'http://127.0.0.1:5002/john',
-          referralLink: 'https://api.daily.dev/get?r=john',
+          ...userExpected,
           firstVisit: res.body.user.firstVisit,
           isFirstVisit: res.body.user.isFirstVisit,
-          username: 'john',
+          permalink: 'http://127.0.0.1:5002/idoshamun',
+          providers: ['github'],
+          roles: [],
         },
-        registrationLink: 'http://127.0.0.1:5002/register',
         flags: {
           feat_limit_dev_card: {
             enabled: false,
@@ -361,6 +378,7 @@ describe('boot routes', () => {
     await role.add('1', 'moderator');
 
     mockFeatureFlagForUser('feat_limit_dev_card', false);
+    mockUserApi();
 
     const res = await request
       .get('/boot')
@@ -381,28 +399,21 @@ describe('boot routes', () => {
       .a('string');
     delete res.body.visit;
     delete res.body.user.createdAt;
+
+    const { createdAt, ...userCheck } = defaultUser;
+
     expect(res.body)
       .to
       .deep
       .equal({
         user: {
-          id: '1',
           providers: ['github'],
-          name: 'John',
-          image: 'https://daily.dev/john.jpg',
-          email: 'john@daily.dev',
-          infoConfirmed: false,
-          premium: false,
-          acceptedMarketing: true,
+          ...userCheck,
           roles: ['admin', 'moderator'],
-          reputation: 10,
-          permalink: 'http://127.0.0.1:5002/john',
-          referralLink: 'https://api.daily.dev/get?r=john',
           firstVisit: res.body.user.firstVisit,
           isFirstVisit: res.body.user.isFirstVisit,
-          username: 'john',
+          permalink: 'http://127.0.0.1:5002/idoshamun',
         },
-        registrationLink: 'http://127.0.0.1:5002/register',
         flags: {
           feat_limit_dev_card: {
             enabled: false,
@@ -414,6 +425,7 @@ describe('boot routes', () => {
   });
 
   it('should refresh access token when refresh token is available', async () => {
+    mockUserApi();
     const res = await request
       .get('/boot')
       .set('Cookie', ['da5=refresh'])
@@ -616,7 +628,7 @@ describe('boot routes', () => {
         ...POST_DEFAULT,
       },
     };
-
+    mockUserApi();
     mockGraphApi(EXPECTED);
 
     const res = await request
@@ -646,6 +658,7 @@ describe('boot routes', () => {
 
   it('should return submit_article false if flag exists', async () => {
     mockFeatureFlagForUser('submit_article', false);
+    mockUserApi();
 
     const res = await request
       .get('/boot')
@@ -658,8 +671,20 @@ describe('boot routes', () => {
   });
 
   it('should set submit_article to true if user has enough reputation', async () => {
+    mockUserApi({
+      id: '1',
+      bio: null,
+      github: null,
+      hashnode: null,
+      name: 'Ido',
+      image: 'https://daily.dev/ido.jpg',
+      createdAt: new Date(),
+      twitter: null,
+      username: 'idoshamun',
+      infoConfirmed: true,
+      reputation: 250,
+    });
     mockFeatureFlagForUser('submit_article', false);
-    await userModel.updateReputation('1', 250);
 
     const res = await request
       .get('/boot')

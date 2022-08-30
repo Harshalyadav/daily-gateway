@@ -8,6 +8,7 @@ import userModel from '../../../src/models/user';
 import app from '../../../src';
 import { sign } from '../../../src/jwt';
 import { generateChallenge } from '../../../src/auth';
+import config from '../../../src/config';
 
 describe('auth routes', () => {
   let request;
@@ -62,6 +63,10 @@ describe('auth routes', () => {
       })
         .get('/user/public_emails')
         .reply(200, [{ email: 'email@foo.com' }]);
+
+      nock(config.apiUrl)
+        .post('/p/newUser')
+        .reply(200, JSON.stringify({ status: 'ok', userId: 'github_id' }));
 
       nock('https://api.github.com', {
         reqheaders: {
@@ -123,6 +128,10 @@ describe('auth routes', () => {
       })
         .get('/user')
         .reply(200, { id: 'github_id' });
+
+      nock(config.apiUrl)
+        .post('/p/newUser')
+        .reply(200, JSON.stringify({ status: 'ok', userId: 'github_id' }));
 
       const verifier = 'verify';
       const code = await sign({
