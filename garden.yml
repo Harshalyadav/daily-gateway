@@ -30,6 +30,7 @@ tasks:
       JWT_ISSUER: 'Daily API Staging'
       CORS_ORIGIN: http://,chrome-extension://,moz-extension://,safari-web-extension://
       API_URL: http://api
+      PUBLIC_API_URL: http://api
       API_SECRET: topsecret
       SCRAPER_SECRET: topsecret
       PRIMARY_AUTH_ORIGIN: "http://${var.api-hostname}"

@@ -117,7 +117,7 @@ if (config.env !== 'production') {
 }
 
 app.use(proxy('/r', {
-  target: config.apiUrl,
+  target: config.publicApiUrl,
   changeOrigin: true,
   xfwd: true,
 }));
@@ -150,13 +150,13 @@ app.use(proxy('/scrape', {
 }));
 
 app.use(proxy('/graphql', {
-  target: config.apiUrl,
+  target: config.publicApiUrl,
   changeOrigin: true,
   xfwd: true,
 }));
 
 app.use(proxy('/', {
-  target: config.apiUrl,
+  target: config.publicApiUrl,
   changeOrigin: true,
   xfwd: true,
 }));

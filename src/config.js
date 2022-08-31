@@ -127,6 +127,7 @@ const config = {
   redirectorUrl: process.env.REDIRECTOR_URL || 'http://localhost:9090',
   besticonUrl: process.env.BESTICON_URL || 'http://localhost:8080',
   apiUrl: process.env.API_URL || 'http://localhost:5000',
+  publicApiUrl: process.env.PUBLIC_API_URL || 'http://localhost:5000',
   apiSecret: process.env.API_SECRET,
   scraperUrl: process.env.SCRAPER_URL || 'http://localhost:5001',
   scraperSecret: process.env.SCRAPER_SECRET,

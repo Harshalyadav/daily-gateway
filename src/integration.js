@@ -16,18 +16,26 @@ const getHeaders = (ctx) => {
 };
 
 const queryDailyApi = async (ctx, method, route, params = {}) => {
-  const headers = getHeaders(ctx);
-  const res = await rp({
-    method,
-    url: config.apiUrl + route,
-    body: JSON.stringify(params),
-    headers: {
-      ...headers,
-      'content-type': 'application/json',
-    },
-  });
+  try {
+    const headers = getHeaders(ctx);
+    const res = await rp({
+      method,
+      url: config.apiUrl + route,
+      body: JSON.stringify(params),
+      headers: {
+        ...headers,
+        'content-type': 'application/json',
+      },
+    });
 
-  return JSON.parse(res);
+    return JSON.parse(res);
+  } catch (err) {
+    ctx.log.error({
+      err,
+      route,
+    }, 'failed to request api');
+    throw err;
+  }
 };
 
 export const getFromDailyGraphQLApi = (ctx, query) => queryDailyApi(ctx, 'POST', '/graphql', query);

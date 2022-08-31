@@ -11,6 +11,7 @@ config:
     apiSecret:
       secure: AAABAHQnHsfEQMSAZQTxPGaQDcrBRcfzyt0k+QSgtkLpYyDea1jkA20rW+VsbtDDY8jndj21NIiTJVws+6OjYA==
     apiUrl: http://api-private
+    publicApiUrl: http://api
     besticonUrl:
       secure: AAABAL3ip6o8hb2h0a1ProB1IJa39uA6Wq6GNvgqgl2q897sEelsZ598LBmuF/hNcA==
     bluesnapApiKey:
