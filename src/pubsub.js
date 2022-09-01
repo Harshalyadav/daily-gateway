@@ -1,7 +1,6 @@
 import { PubSub } from '@google-cloud/pubsub';
 
 export const pubsub = new PubSub();
-export const usernameChangedTopic = pubsub.topic('username-changed');
 export const userDeletedTopic = pubsub.topic('user-deleted');
 export const participantEligilbleTopic = pubsub.topic('new-eligible-participant');
 export const featuresResetTopic = pubsub.topic('features-reset');

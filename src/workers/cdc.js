@@ -3,27 +3,12 @@ import {
   participantEligilbleTopic,
   publishEvent,
   userDeletedTopic,
-  usernameChangedTopic,
 } from '../pubsub';
-import db, { toCamelCase } from '../db';
+import { toCamelCase } from '../db';
 
 const onUserChange = async (log, data) => {
   if (data.payload.op === 'd') {
     await publishEvent(userDeletedTopic, data.payload.before);
-  } else {
-    // Workaround to support utf8mb4
-    const res = await db.select().from('users').where('id', '=', data.payload.after.id).limit(1);
-    if (res.length) {
-      if (data.payload.op === 'u' && data.payload.before.reputation === data.payload.after.reputation) {
-        if (data.payload.before.username !== data.payload.after.username) {
-          await publishEvent(usernameChangedTopic, {
-            userId: data.payload.after.id,
-            oldUsername: data.payload.before.username,
-            newUsername: data.payload.after.username,
-          });
-        }
-      }
-    }
   }
 };
 
