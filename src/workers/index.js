@@ -1,4 +1,3 @@
-import updateReferralContest from './updateReferralContest';
 import eligibleParticipantNotification from './eligibleParticipantNotification';
 import eligibleParticipantBoostChances from './eligibleParticipantBoostChances';
 import cdc from './cdc';
@@ -7,7 +6,6 @@ import updateAlerts from './updateAlerts';
 import updateSettings from './updateSettings';
 
 const workers = [
-  updateReferralContest,
   eligibleParticipantNotification,
   eligibleParticipantBoostChances,
   cdc,
