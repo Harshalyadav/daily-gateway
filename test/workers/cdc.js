@@ -7,7 +7,6 @@ import { expectSuccessfulBackground, mockChangeMessage } from '../helpers';
 import {
   participantEligilbleTopic,
   userDeletedTopic,
-  userRegisteredTopic,
   usernameChangedTopic,
 } from '../../src/pubsub';
 import db, { migrate, toCamelCase } from '../../src/db';
@@ -32,21 +31,6 @@ describe('cdc', () => {
     created_at: new Date(2021, 9, 19),
     updated_at: new Date(2021, 9, 19),
   };
-
-  it('should notify on a new user', async () => {
-    await db.insert(baseUser).into('users');
-    const [user] = await db.select().from('users').where('id', '=', baseUser.id).limit(1);
-    await expectSuccessfulBackground(
-
-      worker,
-      mockChangeMessage({
-        after: user,
-        op: 'c',
-        table: 'users',
-      }),
-    );
-    expect(publishEventStub.calledWith(userRegisteredTopic, toCamelCase(user))).to.be.ok;
-  });
 
   it('should not notify on user update when reputation changes', async () => {
     await db.insert(baseUser).into('users');
