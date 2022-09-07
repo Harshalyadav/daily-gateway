@@ -11,7 +11,6 @@ config:
     apiSecret:
       secure: AAABAHQnHsfEQMSAZQTxPGaQDcrBRcfzyt0k+QSgtkLpYyDea1jkA20rW+VsbtDDY8jndj21NIiTJVws+6OjYA==
     apiUrl: http://api-private
-    publicApiUrl: http://api
     besticonUrl:
       secure: AAABAL3ip6o8hb2h0a1ProB1IJa39uA6Wq6GNvgqgl2q897sEelsZ598LBmuF/hNcA==
     bluesnapApiKey:
@@ -48,6 +47,8 @@ config:
       secure: AAABAO5QD9ZgtrDTs+HRPj1ceW68t45lrkc5BuCNrAcIlcbHMQITuyI=
     jwtSecret:
       secure: AAABANCCeArTMMer7h3/MMcQCgWfGnBeJ8rICqwCs1zIapUKGY/yoo9HjsUtThAGCEk33w==
+    kratosOrigin:
+      secure: AAABAAtgHDqxwgihqbSDyisHD8w3v7PMxWhCGZydfCeetazRWCEuwOddlzeaGnSxPDbEtNI=
     monetizationUrl:
       secure: AAABADsZxoQN01o2UViaCkvADOAQkwKj8FygPMea0xpxdB2ty2ss+N/OeovlQtsJC1fx
     mysqlDatabase:
@@ -61,6 +62,7 @@ config:
     nodeEnv: production
     primaryAuthOrigin:
       secure: AAABAPgfSLaY8dovND6oiOibCpQMLkOM5mnmVr9y91Hg3eSztUZTONPUEDzyQnDFN+2DDRE=
+    publicApiUrl: http://api
     redirectorUrl:
       secure: AAABAFGcf76hMDEGDsmq1XF9nwhXAxyMZoaOo7OLd/U51KeVwoGn33Hh
     refreshTokenSalt:
