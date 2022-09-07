@@ -42,8 +42,8 @@ const validateKratosToken = async (ctx) => {
       endTime,
       totalTime: endTime - startTime,
     }, 'Time to Kratos whoami call');
-    if (kratos?.identity?.id) {
-      ctx.state.user = { userId: kratos.identity.id, isKratos: true };
+    if (kratos?.traits?.userId) {
+      ctx.state.user = { userId: kratos.traits.userId, isKratos: true };
       return true;
     }
   } catch (e) {
