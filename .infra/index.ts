@@ -73,11 +73,12 @@ const containerEnvVars = convertRecordToContainerEnvVars({
   data: envVars,
 });
 
+const memory = 1024;
 const limits: Input<{
   [key: string]: Input<string>;
 }> = {
   cpu: '1',
-  memory: '512Mi',
+  memory: `${memory}Mi`,
 };
 
 const bgLimits: Input<{
@@ -171,7 +172,13 @@ const deployKubernetesResources = (name: string, isPrimary: boolean, {
         ports: [{name: 'http', containerPort: 3000, protocol: 'TCP'}],
         readinessProbe: probe,
         livenessProbe: probe,
-        env: containerEnvVars,
+        env: [
+          ...containerEnvVars,
+          {
+            name: 'NODE_OPTIONS',
+            value: `--max-old-space-size=${Math.floor(memory * 0.9).toFixed(0)}`,
+          },
+        ],
         resources: {
           requests: limits,
           limits,
