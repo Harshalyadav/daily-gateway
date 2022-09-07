@@ -48,7 +48,7 @@ config:
     jwtSecret:
       secure: AAABANCCeArTMMer7h3/MMcQCgWfGnBeJ8rICqwCs1zIapUKGY/yoo9HjsUtThAGCEk33w==
     kratosOrigin:
-      secure: AAABAAtgHDqxwgihqbSDyisHD8w3v7PMxWhCGZydfCeetazRWCEuwOddlzeaGnSxPDbEtNI=
+      secure: AAABACk36pkpvar6qaavgJj9gYKr2KzGD+3xmcDCNbldpd02j/wd2F/e7fvcQwQsiiFMOvxCO+rSl0OV60watr0bxBweMQ==
     monetizationUrl:
       secure: AAABADsZxoQN01o2UViaCkvADOAQkwKj8FygPMea0xpxdB2ty2ss+N/OeovlQtsJC1fx
     mysqlDatabase:
@@ -81,5 +81,6 @@ config:
       secure: AAABAIqlleKQsN1FpB1M2kfuP7qap03jqkB+QfZP4EoApt+twCEs2nbqCT07ljv700WuVRs=
   gateway:k8s:
     namespace: daily
+  gateway:tag: f3675e394b56919815d5c157ce897bad7265d92e
   gcp:project: devkit-prod
   gcp:region: us-central1
