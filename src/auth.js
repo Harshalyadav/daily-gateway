@@ -89,16 +89,26 @@ export const logout = async (ctx) => {
     const logoutInit = await rp(`${config.kratosOrigin}/self-service/logout/browser`, { headers: { cookie: ctx.req.headers.cookie, forwarded: ctx.req.headers.forwarded } });
     const logoutFlow = JSON.parse(logoutInit);
     if (logoutFlow?.logout_url) {
-      await rp(logoutFlow.logout_url, { headers: ctx.req.headers });
+      const logoutParts = logoutFlow.logout_url.split('/self-service/');
+      const logoutUrl = `${config.kratosOrigin}/self-service/${logoutParts[1]}`;
+      try {
+        await rp(
+          logoutUrl,
+          {
+            headers: {
+              cookie: ctx.req.headers.cookie,
+              forwarded: ctx.req.headers.forwarded,
+            },
+            followRedirect: false,
+          },
+        );
+      } catch (e) {
+        if (e.statusCode !== 303) {
+          throw e;
+        }
+      }
       ctx.cookies.set('ory_kratos_continuity');
       ctx.cookies.set('ory_kratos_session');
-      // Remove all existing CSRF tokens
-      const cookies = ctx.req.headers.cookie.split(';');
-      cookies.forEach((cookie) => {
-        if (cookie.replace(/\s/, '').indexOf('csrf_token_') === 0) {
-          ctx.cookies.set(cookie.split('=')[0].trim());
-        }
-      });
     }
   }
 

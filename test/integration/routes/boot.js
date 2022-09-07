@@ -272,7 +272,7 @@ describe('boot routes', () => {
     };
 
     mockUserApi(expected);
-    mockKratos({ identity: { id: 1 } });
+    mockKratos({ identity: { traits: { userId: 1 } } });
 
     const res = await request
       .get('/boot')
