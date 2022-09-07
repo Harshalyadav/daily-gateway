@@ -34,7 +34,7 @@ const validateRefreshToken = async (ctx) => {
 const validateKratosToken = async (ctx) => {
   try {
     const startTime = performance.now();
-    const res = await rp(`${config.kratosOrigin}/sessions/whoami`, { headers: { cookies: ctx.req.headers.cookie } });
+    const res = await rp(`${config.kratosOrigin}/sessions/whoami`, { headers: { cookie: ctx.req.headers.cookie, forwarded: ctx.req.headers.forwarded } });
     const kratos = JSON.parse(res);
     const endTime = performance.now();
     logger.info({
@@ -86,7 +86,7 @@ export const logout = async (ctx) => {
 
   const isKratos = ctx.cookies.get(config.cookies.kratos.key);
   if (isKratos) {
-    const logoutInit = await rp(`${config.kratosOrigin}/self-service/logout/browser`, { headers: { cookies: ctx.req.headers.cookie } });
+    const logoutInit = await rp(`${config.kratosOrigin}/self-service/logout/browser`, { headers: { cookie: ctx.req.headers.cookie, forwarded: ctx.req.headers.forwarded } });
     const logoutFlow = JSON.parse(logoutInit);
     if (logoutFlow?.logout_url) {
       await rp(logoutFlow.logout_url, { headers: ctx.req.headers });
