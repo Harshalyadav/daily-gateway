@@ -2,15 +2,8 @@ import {
   messageToJson,
   participantEligilbleTopic,
   publishEvent,
-  userDeletedTopic,
 } from '../pubsub';
 import { toCamelCase } from '../db';
-
-const onUserChange = async (log, data) => {
-  if (data.payload.op === 'd') {
-    await publishEvent(userDeletedTopic, data.payload.before);
-  }
-};
 
 const onReferralContestsChange = async (log, data) => {
   if (data.payload.op === 'u') {
@@ -33,9 +26,6 @@ const worker = {
         return;
       }
       switch (data.payload?.source?.table) {
-        case 'users':
-          await onUserChange(log, data);
-          break;
         case 'referral_participants':
           await onReferralContestsChange(log, data);
           break;

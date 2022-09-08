@@ -6,9 +6,8 @@ import * as pubsub from '../../src/pubsub';
 import { expectSuccessfulBackground, mockChangeMessage } from '../helpers';
 import {
   participantEligilbleTopic,
-  userDeletedTopic,
 } from '../../src/pubsub';
-import db, { migrate, toCamelCase } from '../../src/db';
+import db, { migrate } from '../../src/db';
 
 describe('cdc', () => {
   let publishEventStub;
@@ -21,31 +20,6 @@ describe('cdc', () => {
 
   afterEach(() => {
     sinon.restore();
-  });
-
-  const baseUser = {
-    id: '1',
-    username: 'idoshamun',
-    name: 'Ido Shamun',
-    created_at: new Date(2021, 9, 19),
-    updated_at: new Date(2021, 9, 19),
-  };
-
-  it('should notify on user deleted', async () => {
-    await expectSuccessfulBackground(
-
-      worker,
-      mockChangeMessage({
-        before: baseUser,
-        op: 'd',
-        table: 'users',
-      }),
-    );
-    expect(publishEventStub.calledWith(userDeletedTopic, toCamelCase({
-      ...baseUser,
-      created_at: baseUser.created_at.toISOString(),
-      updated_at: baseUser.updated_at.toISOString(),
-    }))).to.be.ok;
   });
 
   const baseParticipant = {

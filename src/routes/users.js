@@ -14,8 +14,16 @@ const updateUser = async (userId, user, newProfile) => {
   await userModel.update(userId, newProfile);
 };
 
-const deleteUser = async (userId) => {
+const deleteUser = async (userId, ctx) => {
   await userModel.deleteAccount(userId);
+  await getFromDailyGraphQLApi(ctx, {
+    query: `mutation DeleteUser {
+        deleteUser {
+          _
+        }
+      }
+      `,
+  });
 };
 
 const router = Router({
@@ -195,13 +203,8 @@ router.get('/me/roles', async (ctx) => {
 router.delete('/me', async (ctx) => {
   if (ctx.state.user) {
     const { userId } = ctx.state.user;
-    const user = await userModel.getById(userId);
-    if (!user) {
-      throw new ForbiddenError();
-    }
-
-    await deleteUser(userId);
-    logout(ctx);
+    await deleteUser(userId, ctx);
+    await logout(ctx);
   } else {
     throw new ForbiddenError();
   }
