@@ -12,14 +12,28 @@ const extractDomain = (ctx) => {
   return parts.join('.');
 };
 
+export const addKratosHeaderCookies = (ctx) => (
+  {
+    headers: {
+      cookie: ctx.req.headers.cookie,
+      forwarded: ctx.req.headers.forwarded,
+    },
+  });
+
 export const addSubdomainOpts = (ctx, opts) => {
   const domain = extractDomain(ctx);
-  return { ...opts, domain };
+  return {
+    ...opts,
+    domain,
+  };
 };
 
 export const setAuthCookie = async (ctx, userId, roles = []) => {
   const accessToken = await signJwt(
-    { userId, roles },
+    {
+      userId,
+      roles,
+    },
     15 * 60 * 1000,
   );
   ctx.cookies.set(

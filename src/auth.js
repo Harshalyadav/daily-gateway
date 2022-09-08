@@ -5,7 +5,7 @@ import refreshTokenModel from './models/refreshToken';
 import { ForbiddenError } from './errors';
 import logger from './logger';
 import { setTrackingId } from './tracking';
-import { addSubdomainOpts } from './cookies';
+import { addKratosHeaderCookies, addSubdomainOpts } from './cookies';
 
 const base64URLEncode = (str) => str.toString('base64')
   .replace(/\+/g, '-')
@@ -34,7 +34,7 @@ const validateRefreshToken = async (ctx) => {
 const validateKratosToken = async (ctx) => {
   try {
     const startTime = performance.now();
-    const res = await rp(`${config.kratosOrigin}/sessions/whoami`, { headers: { cookie: ctx.req.headers.cookie, forwarded: ctx.req.headers.forwarded } });
+    const res = await rp(`${config.kratosOrigin}/sessions/whoami`, addKratosHeaderCookies(ctx));
     const kratos = JSON.parse(res);
     const endTime = performance.now();
     logger.info({
@@ -86,7 +86,7 @@ export const logout = async (ctx) => {
 
   const isKratos = ctx.cookies.get(config.cookies.kratos.key);
   if (isKratos) {
-    const logoutInit = await rp(`${config.kratosOrigin}/self-service/logout/browser`, { headers: { cookie: ctx.req.headers.cookie, forwarded: ctx.req.headers.forwarded } });
+    const logoutInit = await rp(`${config.kratosOrigin}/self-service/logout/browser`, addKratosHeaderCookies(ctx));
     const logoutFlow = JSON.parse(logoutInit);
     if (logoutFlow?.logout_url) {
       const logoutParts = logoutFlow.logout_url.split('/self-service/');
@@ -95,10 +95,7 @@ export const logout = async (ctx) => {
         await rp(
           logoutUrl,
           {
-            headers: {
-              cookie: ctx.req.headers.cookie,
-              forwarded: ctx.req.headers.forwarded,
-            },
+            ...addKratosHeaderCookies(ctx),
             followRedirect: false,
           },
         );
