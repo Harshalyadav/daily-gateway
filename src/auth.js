@@ -107,8 +107,8 @@ export const logout = async (ctx) => {
           throw e;
         }
       }
-      ctx.cookies.set('ory_kratos_continuity');
-      ctx.cookies.set('ory_kratos_session');
+      ctx.cookies.set('ory_kratos_continuity', undefined, addSubdomainOpts(ctx));
+      ctx.cookies.set('ory_kratos_session', undefined, addSubdomainOpts(ctx));
     }
   }
 
