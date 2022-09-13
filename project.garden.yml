@@ -23,4 +23,3 @@ variables:
   mysql-password: root
   pubsub-host: "pubsub:8085"
   gcloud-project: local
-  debezium-tag: "2.0"

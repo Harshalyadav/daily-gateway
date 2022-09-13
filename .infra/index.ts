@@ -1,6 +1,6 @@
 import * as gcp from '@pulumi/gcp';
 import * as k8s from '@pulumi/kubernetes';
-import {Input, Output, ProviderResource, Resource} from '@pulumi/pulumi';
+import {Input, ProviderResource, Resource} from '@pulumi/pulumi';
 import {
   addLabelsToWorkers,
   config,
@@ -12,7 +12,6 @@ import {
   createMigrationJob,
   createServiceAccountAndGrantRoles,
   createSubscriptionsFromWorkers,
-  deployDebeziumToKubernetes,
   getFullSubscriptionLabel,
   getImageTag,
   getMemoryAndCpuMetrics,
@@ -147,16 +146,6 @@ const deployKubernetesResources = (name: string, isPrimary: boolean, {
       {provider, resourcePrefix},
     );
     deploymentDependsOn.push(migrationJob);
-
-    // IMPORTANT: do not set resource prefix here, otherwise it might create new disk and other resources
-    deployDebeziumToKubernetes(
-      name,
-      namespace,
-      debeziumTopic,
-      Output.create(getDebeziumProps()),
-      `${location}-f`,
-      {diskType: 'pd-ssd', diskSize: 100, image: 'debezium/server:1.6', provider},
-    );
   }
 
   createAutoscaledExposedApplication({

@@ -2,8 +2,6 @@ kind: Module
 type: container
 name: gateway
 dockerfile: "${var.dev ? 'Dockerfile.dev' : 'Dockerfile.multistage'}"
-exclude:
-  - debezium/**/*
 tasks:
   - name: gateway-migrate
     args: ['yarn', 'run', 'db:migrate:latest']
@@ -59,7 +57,6 @@ services:
       - mysql
       - gateway-migrate
       - pubsub
-      - gateway-debezium
     ports:
       - name: http
         containerPort: 4000
