@@ -36,6 +36,7 @@ tasks:
       REFRESH_TOKEN_SECRET: topsecret
       REFRESH_TOKEN_SALT: salt
       FLAGSMITH_KEY: LZp89Rk56sytKH9AeHyCtF
+      KRATOS_GITHUB_ENDPOINT: 'http://sso.apps.local.app.garden/api/github_redirect'
     dependencies:
       - mysql
   - name: gateway-pubsub-init

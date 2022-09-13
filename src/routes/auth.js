@@ -24,7 +24,7 @@ const providersConfig = {
 
 const allowedOrigins = config.cors.origin.split(',');
 const fallbackAvatar = 'https://res.cloudinary.com/daily-now/image/upload/v1594823750/placeholders/avatar.jpg';
-const primaryRedirectUri = `${config.primaryAuthOrigin}/v1/auth/callback`;
+const primaryRedirectUri = process.env.KRATOS_GITHUB_ENDPOINT;
 
 const generateRefreshToken = async (ctx, userId) => {
   const refreshToken = refreshTokenModel.generate();
@@ -110,17 +110,17 @@ const authenticateToken = async (ctx, redirectUri, providerName, providerCode) =
   };
 };
 
-const authorize = (ctx, providerName, redirectUri) => {
+const authorize = (ctx, providerName) => {
   const { query, origin, url: reqUrl } = ctx.request;
   if (origin !== config.primaryAuthOrigin) {
     ctx.status = 307;
     ctx.redirect(`${config.primaryAuthOrigin}${reqUrl}`);
     return;
   }
+  const providerConfig = providersConfig[providerName];
 
   validateRedirectUri(query.redirect_uri);
-  const providerConfig = providersConfig[providerName];
-  const url = `${providerConfig.authorizeUrl}?access_type=offline&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&client_id=${providerConfig.clientId}&scope=${encodeURIComponent(providerConfig.scope)}&state=${encodeURIComponent(JSON.stringify(query))}`;
+  const url = `${providerConfig.authorizeUrl}?access_type=offline&response_type=code&redirect_uri=${encodeURIComponent(primaryRedirectUri)}&client_id=${providerConfig.clientId}&scope=${encodeURIComponent(providerConfig.scope)}&state=${encodeURIComponent(JSON.stringify(query))}`;
 
   ctx.status = 307;
   ctx.redirect(url);
@@ -183,8 +183,7 @@ router.get(
   }),
   async (ctx) => {
     const { query } = ctx.request;
-    const redirectUri = `${ctx.request.origin}/v1/auth/callback`;
-    authorize(ctx, query.provider, redirectUri);
+    authorize(ctx, query.provider);
   },
 );
 

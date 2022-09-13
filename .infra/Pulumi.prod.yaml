@@ -47,6 +47,8 @@ config:
       secure: AAABAO5QD9ZgtrDTs+HRPj1ceW68t45lrkc5BuCNrAcIlcbHMQITuyI=
     jwtSecret:
       secure: AAABANCCeArTMMer7h3/MMcQCgWfGnBeJ8rICqwCs1zIapUKGY/yoo9HjsUtThAGCEk33w==
+    kratosGithubEndpoint:
+      secure: AAABAEJQvMIqVDFAJvdygzMlBrwmG8c+GsyteHbLl2VXVAgmWUT2bVdw+gdol4moGg/wzujLXxPb82vvw0MdSsUpWS5CdsMLXw==
     kratosOrigin:
       secure: AAABACk36pkpvar6qaavgJj9gYKr2KzGD+3xmcDCNbldpd02j/wd2F/e7fvcQwQsiiFMOvxCO+rSl0OV60watr0bxBweMQ==
     monetizationUrl:
