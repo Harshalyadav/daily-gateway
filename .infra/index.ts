@@ -1,35 +1,19 @@
 import * as gcp from '@pulumi/gcp';
 import * as k8s from '@pulumi/kubernetes';
-import {Input, ProviderResource, Resource} from '@pulumi/pulumi';
+import {Input} from '@pulumi/pulumi';
 import {
   addLabelsToWorkers,
   config,
-  convertRecordToContainerEnvVars,
-  createAutoscaledApplication,
-  createAutoscaledExposedApplication,
-  createK8sServiceAccountFromGCPServiceAccount,
-  createKubernetesSecretFromRecord,
-  createMigrationJob,
   createServiceAccountAndGrantRoles,
-  createSubscriptionsFromWorkers,
-  getFullSubscriptionLabel,
+  createSubscriptionsFromWorkers, deployApplicationSuite,
   getImageTag,
-  getMemoryAndCpuMetrics,
-  getPubSubUndeliveredMessagesMetric, getVpcNativeCluster, gracefulTerminationHook,
-  k8sServiceAccountToIdentity,
-  location,
+  location, nodeOptions,
 } from '@dailydotdev/pulumi-common';
-import {readFile} from 'fs/promises';
 
 const workers = require('./workers');
 
 const imageTag = getImageTag();
 const name = 'gateway';
-const debeziumTopicName = `${name}.changes`;
-
-const debeziumTopic = new gcp.pubsub.Topic('debezium-topic', {
-  name: debeziumTopicName,
-});
 
 // Provision Redis (Memorystore)
 const redis = new gcp.redis.Instance(`${name}-redis`, {
@@ -67,11 +51,6 @@ const envVars: Record<string, Input<string>> = {
   redisPort: redis.port.apply((port) => port.toString()),
 };
 
-const containerEnvVars = convertRecordToContainerEnvVars({
-  secretName: name,
-  data: envVars,
-});
-
 const memory = 1024;
 const limits: Input<{
   [key: string]: Input<string>;
@@ -96,134 +75,32 @@ const topics = ['features-reset', 'username-changed'].map(
 createSubscriptionsFromWorkers(
   name,
   addLabelsToWorkers(workers, {app: name}),
-  {dependsOn: [debeziumTopic, ...topics]},
+  {dependsOn: topics},
 );
 
-const getDebeziumProps = async (): Promise<string> => {
-  return (await readFile('./application.properties', 'utf-8'))
-    .replace('%database_pass%', config.require('debeziumDbPass'))
-    .replace('%database_user%', config.require('debeziumDbUser'))
-    .replace('%database_dbname%', envVars.mysqlDatabase as string)
-    .replace('%hostname%', envVars.mysqlHost as string)
-    .replace('%topic%', debeziumTopicName);
-};
-
-const deployKubernetesResources = (name: string, isPrimary: boolean, {
-  provider,
-  resourcePrefix = '',
-}: { provider?: ProviderResource; resourcePrefix?: string } = {}): void => {
-  const k8sServiceAccount = createK8sServiceAccountFromGCPServiceAccount(
-    `${resourcePrefix}${name}-k8s-sa`,
-    name,
-    namespace,
-    serviceAccount,
-    provider
-  );
-
-  new gcp.serviceaccount.IAMBinding(`${resourcePrefix}${name}-k8s-iam-binding`, {
-    role: 'roles/iam.workloadIdentityUser',
-    serviceAccountId: serviceAccount.id,
-    members: [k8sServiceAccountToIdentity(k8sServiceAccount)],
-  });
-
-  createKubernetesSecretFromRecord({
-    data: envVars,
-    resourceName: `${resourcePrefix}k8s-secret`,
-    name,
-    namespace,
-    provider,
-  });
-
-  const deploymentDependsOn: Input<Resource>[] = [];
-  if (isPrimary) {
-    const migrationJob = createMigrationJob(
-      `${name}-migration`,
-      namespace,
-      image,
-      ['yarn', 'run', 'db:migrate:latest'],
-      containerEnvVars,
-      k8sServiceAccount,
-      {provider, resourcePrefix},
-    );
-    deploymentDependsOn.push(migrationJob);
-  }
-
-  createAutoscaledExposedApplication({
-    resourcePrefix,
-    name,
-    namespace: namespace,
-    version: imageTag,
-    serviceAccount: k8sServiceAccount,
-    containers: [
-      {
-        name: 'app',
-        image,
-        ports: [{name: 'http', containerPort: 3000, protocol: 'TCP'}],
-        readinessProbe: probe,
-        livenessProbe: probe,
-        env: [
-          ...containerEnvVars,
-          {
-            name: 'NODE_OPTIONS',
-            value: `--max-old-space-size=${Math.floor(memory * 0.9).toFixed(0)}`,
-          },
-        ],
-        resources: {
-          requests: limits,
-          limits,
-        },
-        lifecycle: gracefulTerminationHook(),
-      },
-    ],
+deployApplicationSuite({
+  name,
+  namespace,
+  image,
+  imageTag,
+  serviceAccount,
+  secrets: envVars,
+  migration: {
+    args: ['yarn', 'run', 'db:migrate:latest']
+  },
+  apps: [{
+    port: 3000,
+    env: [nodeOptions(memory)],
     maxReplicas: 10,
-    metrics: getMemoryAndCpuMetrics(),
-    deploymentDependsOn,
-    provider,
-  });
-
-  createAutoscaledApplication({
-    resourcePrefix: `${resourcePrefix}bg-`,
-    name: `${name}-bg`,
-    namespace,
-    version: imageTag,
-    serviceAccount: k8sServiceAccount,
-    containers: [
-      {
-        name: 'app',
-        image,
-        env: [...containerEnvVars, {name: 'MODE', value: 'background'}],
-        resources: {
-          requests: bgLimits,
-          limits: bgLimits,
-        },
-      },
-    ],
-    minReplicas: 2,
+    limits,
+    readinessProbe: probe,
+    metric: {type: 'memory_cpu', cpu: 70},
+    createService: true,
+  }, {
+    nameSuffix: 'bg',
+    env: [{name: 'MODE', value: 'background'}],
     maxReplicas: 10,
-    metrics: [
-      {
-        external: {
-          metric: {
-            name: getPubSubUndeliveredMessagesMetric(),
-            selector: {
-              matchLabels: {
-                [getFullSubscriptionLabel('app')]: name,
-              },
-            },
-          },
-          target: {
-            type: 'Value',
-            averageValue: '20',
-          },
-        },
-        type: 'External',
-      },
-    ],
-    deploymentDependsOn,
-    provider,
-  });
-}
-
-const vpcNativeProvider = getVpcNativeCluster();
-deployKubernetesResources(name, true);
-deployKubernetesResources(name, false, {provider: vpcNativeProvider.provider, resourcePrefix: 'vpc-native-'});
+    limits: bgLimits,
+    metric: {type: 'pubsub', labels: {app: name}, targetAverageValue: 20},
+  }]
+})
