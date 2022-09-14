@@ -189,7 +189,7 @@ export const bootSharedLogic = async (ctx, shouldRefreshToken) => {
           user: {
             ...base.user,
             ...user,
-            providers: [userProvider.provider],
+            providers: [userProvider?.provider],
             roles,
             permalink: `${config.webappOrigin}/${user.username || user.id}`,
           },
