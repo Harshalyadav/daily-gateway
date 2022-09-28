@@ -161,6 +161,7 @@ export const bootSharedLogic = async (ctx, shouldRefreshToken) => {
     try {
       const [user, userProvider, roles] = await Promise.all(userRequests);
       if (!user) {
+        await logout(ctx);
         returnObject = await annonymouseBootResponse(
           ctx,
           visitId,
@@ -170,7 +171,6 @@ export const bootSharedLogic = async (ctx, shouldRefreshToken) => {
           trackingId,
           true,
         );
-        await logout(ctx);
       } else {
         const accessToken = shouldRefreshToken
           ? await setAuthCookie(ctx, user.id, roles)
@@ -205,6 +205,7 @@ export const bootSharedLogic = async (ctx, shouldRefreshToken) => {
     } catch (error) {
       if (error.statusCode === 403 || error.statusCode === 404) {
         ctx.log.error({ error }, 'failed to fetch user from API');
+        await logout(ctx);
         returnObject = await annonymouseBootResponse(
           ctx,
           visitId,
@@ -214,7 +215,6 @@ export const bootSharedLogic = async (ctx, shouldRefreshToken) => {
           trackingId,
           true,
         );
-        await logout(ctx);
       } else {
         throw error;
       }
